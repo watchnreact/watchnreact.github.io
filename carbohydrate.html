@@ -194,22 +194,27 @@
             <p class="page-subtitle"><b>Nội dung cốt lõi:</b> Hóa hữu cơ - Carbohydrate</p>
             <p class="page-subtitle"><b>Nguồn:</b> Kênh YouTube Mr. Skeleton Thí Nghiệm</p>
             
-            <div class="video-wrapper">
-                <video id="mainVideo" controls controlsList="nodownload">
-                    <source src="Thí nghiệm 4 - Tráng gương.mp4" type="video/mp4">
-                    Trình duyệt của bạn không hỗ trợ thẻ video.
-                </video>
-                <div style="margin-top: 1rem; text-align: center;">
-                    <a href="https://youtu.be/FMJCHP2dP04" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
-                        <i class="fab fa-youtube"></i> Xem Video Gốc (YouTube)
-                    </a>
-                </div>
-                <div class="video-overlay-msg" id="videoOverlay">
-                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
-                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
-                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
-                </div>
-            </div>
+            <div class="video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px;">
+    <iframe id="mainVideo" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+            src="https://www.youtube.com/embed/FMJCHP2dP04?enablejsapi=1&rel=0" 
+            title="YouTube video player" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+    </iframe>
+    
+    <div class="video-overlay-msg" id="videoOverlay">
+        <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+        <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+        <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+    </div>
+</div>
+
+<div style="margin-top: 1rem; text-align: center;">
+    <a href="https://youtu.be/FMJCHP2dP04" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+        <i class="fab fa-youtube"></i> Xem Video Gốc trên YouTube
+    </a>
+</div>
             
             <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
                 <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
@@ -354,101 +359,136 @@
     </footer>
 
     <script>
-        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
-        function selectOpt(elem) {
-            const parent = elem.closest('.options');
-            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
-            elem.classList.add('selected');
-        }
+    // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+    function selectOpt(elem) {
+        const parent = elem.closest('.options');
+        parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+        elem.classList.add('selected');
+    }
 
-        function toggleHint(hintId) {
-            const hintEl = document.getElementById(hintId);
-            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
-        }
+    function toggleHint(hintId) {
+        const hintEl = document.getElementById(hintId);
+        hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+    }
 
-        function renderFeedback(cardId, isCorrect, explanation) {
-            const card = document.getElementById(cardId);
-            const fb = card.querySelector('.feedback');
-            fb.style.display = "block";
-            fb.classList.remove('correct', 'wrong');
-            
-            if (isCorrect) {
-                fb.classList.add('correct');
-                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
-            } else {
-                fb.classList.add('wrong');
-                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
-            }
-        }
-
-        function checkMCQ(cardId, correctAns, explanation) {
-            const card = document.getElementById(cardId);
-            const sel = card.querySelector('.option.selected');
-            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
-            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
-        }
-
-        function checkSA(cardId, inputId, correctAns, explanation) {
-            const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
-            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
-            renderFeedback(cardId, val === correctAns, explanation);
-        }
-
-        function checkTF(cardId, ansArray, explanation) {
-            const card = document.getElementById(cardId);
-            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
-            let score = 0, empty = false;
-            
-            names.forEach((n, i) => {
-                const rad = card.querySelector(`input[name="${n}"]:checked`);
-                if(!rad) empty = true;
-                else if(rad.value === ansArray[i]) score++;
-            });
-            
-            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
-            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
-        }
-
-        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
-        const video = document.getElementById('mainVideo');
-        const overlay = document.getElementById('videoOverlay');
+    function renderFeedback(cardId, isCorrect, explanation) {
+        const card = document.getElementById(cardId);
+        const fb = card.querySelector('.feedback');
+        fb.style.display = "block";
+        fb.classList.remove('correct', 'wrong');
         
-        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
-        const triggers = [
-            { time: 15, id: 'q-mcq1', triggered: false },
-            { time: 45, id: 'q-mcq2', triggered: false },
-            { time: 70, id: 'q-mcq3', triggered: false },
-            { time: 110, id: 'q-sa1', triggered: false },
-            { time: 150, id: 'q-tf1', triggered: false },
-            { time: 180, id: 'q-sa2', triggered: false },
-            { time: 220, id: 'q-sa3', triggered: false }
-        ];
+        if (isCorrect) {
+            fb.classList.add('correct');
+            fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+        } else {
+            fb.classList.add('wrong');
+            fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+        }
+    }
 
-        video.addEventListener('timeupdate', () => {
-            const currentTime = video.currentTime;
-            
-            for (let i = 0; i < triggers.length; i++) {
-                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
-                    triggers[i].triggered = true;
-                    video.pause();
-                    overlay.classList.add('active');
-                    
-                    // Highlight và Scroll tới câu hỏi
-                    const questionCard = document.getElementById(triggers[i].id);
-                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
-                    questionCard.classList.add('active-question');
-                    
-                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    break; 
-                }
+    function checkMCQ(cardId, correctAns, explanation) {
+        const card = document.getElementById(cardId);
+        const sel = card.querySelector('.option.selected');
+        if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+        renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+    }
+
+    function checkSA(cardId, inputId, correctAns, explanation) {
+        const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
+        if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+        renderFeedback(cardId, val === correctAns, explanation);
+    }
+
+    function checkTF(cardId, ansArray, explanation) {
+        const card = document.getElementById(cardId);
+        const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+        let score = 0, empty = false;
+        
+        names.forEach((n, i) => {
+            const rad = card.querySelector(`input[name="${n}"]:checked`);
+            if(!rad) empty = true;
+            else if(rad.value === ansArray[i]) score++;
+        });
+        
+        if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+        renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+    }
+
+    // --- HỆ THỐNG YOUTUBE VIDEO TƯƠNG TÁC ---
+    const overlay = document.getElementById('videoOverlay');
+    
+    // Các mốc thời gian kích hoạt câu hỏi
+    const triggers = [
+        { time: 15, id: 'q-mcq1', triggered: false },
+        { time: 45, id: 'q-mcq2', triggered: false },
+        { time: 70, id: 'q-mcq3', triggered: false },
+        { time: 110, id: 'q-sa1', triggered: false },
+        { time: 150, id: 'q-tf1', triggered: false },
+        { time: 180, id: 'q-sa2', triggered: false },
+        { time: 220, id: 'q-sa3', triggered: false }
+    ];
+
+    // Nhúng YouTube IFrame API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    var timeUpdater;
+
+    // Hàm tự động gọi khi YouTube API sẵn sàng
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('mainVideo', {
+            events: {
+                'onStateChange': onPlayerStateChange
             }
         });
+    }
 
-        function resumeVideo() {
-            overlay.classList.remove('active');
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
-            video.play();
+    // Theo dõi trạng thái video
+    function onPlayerStateChange(event) {
+        // YT.PlayerState.PLAYING là 1
+        if (event.data == YT.PlayerState.PLAYING) {
+            // Kiểm tra thời gian mỗi 500ms
+            timeUpdater = setInterval(checkTime, 500);
+        } else {
+            clearInterval(timeUpdater);
         }
-    </script>
+    }
+
+    // Hàm kiểm tra và dừng video tại mốc
+    function checkTime() {
+        if (!player || typeof player.getCurrentTime !== 'function') return;
+        
+        const currentTime = player.getCurrentTime();
+        
+        for (let i = 0; i < triggers.length; i++) {
+            if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                triggers[i].triggered = true;
+                player.pauseVideo(); // Dừng video YouTube
+                overlay.classList.add('active');
+                
+                // Highlight và Scroll tới câu hỏi
+                const questionCard = document.getElementById(triggers[i].id);
+                if(questionCard) {
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                break; 
+            }
+        }
+    }
+
+    // Bỏ qua & tiếp tục xem
+    function resumeVideo() {
+        overlay.classList.remove('active');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+        if (player && typeof player.playVideo === 'function') {
+            player.playVideo(); // Phát tiếp video YouTube
+        }
+    }
+</script>
 </body>
 </html>
