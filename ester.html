@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Phản ứng Ester hóa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Main Container Layout */
+        .layout-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .layout-container { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Video & Header */
+        .video-section { position: sticky; top: 90px; height: fit-content; }
+        .page-title { color: var(--text); font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .page-title span { color: var(--primary); }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        video { width: 100%; display: block; }
+
+        .video-overlay-msg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10;
+        }
+        .video-overlay-msg.active { opacity: 1; pointer-events: auto; }
+        .video-overlay-msg h3 { margin: 0 0 1rem 0; color: var(--accent); font-size: 1.5rem; }
+
+        /* Right Column: Interactive Questions */
+        .questions-section { padding-bottom: 2rem; }
+        
+        .section-tag {
+            display: inline-block; background: var(--surface); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
+            margin: 2rem 0 1rem 0; border: 1px solid var(--border);
+        }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .card.active-question {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.15);
+            transform: translateX(-5px);
+        }
+
+        .card.active-question::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px; background: var(--accent);
+        }
+
+        .question-text { font-weight: 600; font-size: 1.1rem; margin-bottom: 1.2rem; display: block; color: var(--text); }
+        
+        /* Multiple Choice Options */
+        .options { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;}
+        .option { 
+            padding: 12px 16px; border: 2px solid var(--border); border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1rem; background: var(--card-bg); 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .option:hover { border-color: #cbd5e1; background: var(--surface); }
+        .option.selected { border-color: var(--primary); background: #eff6ff; font-weight: 500; }
+        .option.selected::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary); }
+
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; 
+            font-size: 1rem; outline: none; transition: 0.2s; margin-bottom: 1.5rem;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        /* True/False Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: var(--surface); font-weight: 600; color: var(--text); }
+        td:nth-child(2) { white-space: nowrap; text-align: center;}
+        
+        .img-placeholder {
+            background: var(--surface); border: 1px dashed var(--text-muted);
+            padding: 1.5rem; text-align: center; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem;
+        }
+
+        /* Buttons & Feedback */
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; 
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-hint { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-hint:hover { background: #e2e8f0; color: var(--warning); transform: translateY(-2px); }
+
+        .socratic-hint {
+            display: none; background: #fffbeb; border-left: 4px solid var(--warning);
+            padding: 1rem; margin-top: 1rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #92400e;
+        }
+
+        .feedback { 
+            display: none; margin-top: 1.5rem; padding: 1.2rem; 
+            border-radius: 8px; font-size: 0.95rem; line-height: 1.6; 
+        }
+        .feedback.correct { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .feedback.wrong { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem; text-align: center; font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="experiment.html"><i class="fas fa-arrow-left"></i> Trở về danh sách</a>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="video-section">
+            <h1 class="page-title">Video 1: <span>Phản Ứng Ester Hóa</span></h1>
+            <p class="page-subtitle"><b>Nguồn:</b> Kênh TikTok thầy Nguyễn Thành Trung</p>
+            <p class="page-subtitle">Khảo sát phản ứng thuận nghịch tổng hợp cấu trúc hữu cơ mạch hở.</p>
+            
+            <div class="video-wrapper">
+                <video id="mainVideo" controls controlsList="nodownload">
+                    <source src="Thí nghiệm 1 - Ester hóa.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+                <div style="margin-top: 1rem; text-align: center;">
+    <a href="https://vt.tiktok.com/ZSQojPGnx/" target="_blank" class="btn" style="background: #000; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+        <i class="fab fa-tiktok"></i> Xem Video Gốc (TikTok)
+    </a>
+</div>
+                <div class="video-overlay-msg" id="videoOverlay">
+                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
+                <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
+                Video sẽ tự động dừng lại ở những khoảnh khắc quan trọng. Khi đó, một câu hỏi kiểm tra tư duy sẽ xuất hiện bên phải. Hãy cố gắng phân tích và tự trả lời trước khi xem tiếp.
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <div class="section-tag">I. Nhận diện phản ứng & Thao tác cơ bản</div>
+            
+            <div class="card" id="q-mcq1" data-time="15">
+                <span class="question-text">Câu 1: Đun sôi hỗn hợp gồm ethyl alcohol và acetic acid (có acid H<sub>2</sub>SO<sub>4</sub> đặc làm xúc tác) sẽ xảy ra phản ứng:</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Trùng ngưng.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Ester hóa.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Xà phòng hóa.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Trùng hợp.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy nhìn vào nhóm chức của các chất tham gia: Alcohol có nhóm -OH, Acid có nhóm -COOH. Khi chúng kết hợp và loại đi 1 phân tử H<sub>2</sub>O, sản phẩm tạo ra nhóm chức -COO- được gọi chung là hợp chất gì?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq1', 'B', 'Alcohol tác dụng với Carboxylic Acid sinh ra Ester và Nước. Vì thế quá trình này được định danh trực tiếp là Phản ứng Ester hóa.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-tf1" data-time="70">
+                <span class="question-text">Câu 2 (Biện luận Đ/S): Quan sát thao tác điều chế ethyl acetate trong phòng thí nghiệm. Phương trình hóa học của quá trình:</span>
+                <div style="text-align: center; margin-bottom: 1rem; font-weight: bold;">
+                    CH<sub>3</sub>COOH + C<sub>2</sub>H<sub>5</sub>OH &#8652; CH<sub>3</sub>COOC<sub>2</sub>H<sub>5</sub> + H<sub>2</sub>O <span style="margin-left: 20px;">(K<sub>c</sub> = 4)</span><br>
+                    <small>Xúc tác: H<sub>2</sub>SO<sub>4</sub> đặc, t<sup>o</sup></small>
+                </div>
+                
+                <div class="img-placeholder">
+                    [Dữ liệu phổ IR giả định]<br>
+                    <em>Hình 1: Có peak rộng ở vùng 3300-2500 cm<sup>-1</sup> (đặc trưng O-H acid) và 1780-1650 cm<sup>-1</sup> (đặc trưng C=O).<br>
+                    Hình 2: Có peak tù ở vùng 3650-3200 cm<sup>-1</sup> (đặc trưng O-H alcohol), không có peak C=O.</em>
+                </div>
+
+                <table>
+                    <tr><th>Phát biểu biện luận</th><th>Chọn</th></tr>
+                    <tr>
+                        <td>a) Phản ứng hóa học xảy ra trong thí nghiệm trên là phản ứng thủy phân ester.</td>
+                        <td><label><input type="radio" name="tfa" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfa" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>b) Phổ IR trong hình 1 là phổ IR của CH<sub>3</sub>COOH, hình 2 là phổ IR của C<sub>2</sub>H<sub>5</sub>OH.</td>
+                        <td><label><input type="radio" name="tfb" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfb" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>c) Sulfuric acid đặc có vai trò vừa là chất xúc tác, vừa có tác dụng hút nước, làm tăng hiệu suất.</td>
+                        <td><label><input type="radio" name="tfc" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfc" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>d) Ban đầu, lấy số mol hai chất bằng nhau. Khi đạt trạng thái cân bằng (K<sub>c</sub> = 4), % số mol C<sub>2</sub>H<sub>5</sub>OH bị ester hóa là 66,67%.</td>
+                        <td><label><input type="radio" name="tfd" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfd" value="S"> S</label></td>
+                    </tr>
+                </table>
+                <div class="socratic-hint" id="hint-tf1"><strong>💡 Câu hỏi gợi mở:</strong><br>- Chiều thuận tạo ra ester gọi là gì? Chiều nghịch phân cắt ester gọi là gì?<br>- H<sub>2</sub>SO<sub>4</sub> đặc háo nước, theo nguyên lý Le Chatelier, lấy mất nước ở vế phải sẽ làm cân bằng dịch chuyển theo chiều nào?<br>- K<sub>c</sub> = 4, nếu ban đầu mỗi chất 1 mol, phản ứng x mol. Ta có pt: x² / (1-x)² = 4. Giải x bằng bao nhiêu?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkTF('q-tf1', ['S', 'Đ', 'Đ', 'Đ'], 'Phản ứng này là TỔNG HỢP ester (ester hóa), thủy phân là chiều ngược lại. Dữ kiện phổ IR phù hợp lý thuyết nhóm chức. H<sub>2</sub>SO<sub>4</sub> lấy nước làm cân bằng dịch chuyển sang phải. Giải phương trình K<sub>c</sub> ta được x = 2/3 (tức 66.67%).')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-tf1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">II. Kỹ thuật tách & Khảo sát điều kiện</div>
+
+            <div class="card" id="q-sa1" data-time="115">
+                <span class="question-text">Câu 3: Đánh giá mô hình lắp đặt thí nghiệm:</span>
+                <ul style="font-size: 0.95rem; color: var(--text); margin-bottom: 1rem;">
+                    <li>(a) Ethyl acetate có nhiệt độ sôi thấp (77°C) nên dễ bị bay hơi khi đun nóng.</li>
+                    <li>(b) H<sub>2</sub>SO<sub>4</sub> đặc vừa làm xúc tác, vừa hút nước.</li>
+                    <li>(c) Ethyl acetate qua ống dẫn dạng hơi nên cần làm lạnh bằng nước đá để ngưng tụ.</li>
+                    <li>(d) Khi kết thúc, cần tắt đèn cồn trước khi tháo ống dẫn hơi.</li>
+                    <li>(e) Vai trò của đá bọt là để bảo vệ ống nghiệm không bị vỡ do nhiệt.</li>
+                </ul>
+                <p style="margin-top:0; font-weight: bold;">Số phát biểu ĐÚNG là bao nhiêu?</p>
+                <input type="text" id="input-sa1" placeholder="Nhập một số nguyên (VD: 1, 2, 3...)">
+                <div class="socratic-hint" id="hint-sa1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy suy nghĩ về cơ chế vật lý của "đá bọt". Nó có nhiều lỗ rỗng nhỏ chứa không khí. Khi đun sôi, các lỗ này tạo thành các trung tâm mầm bọt khí. Điều này giúp dung dịch sôi như thế nào so với việc đun dung dịch tinh khiết trong ống thủy tinh láng bóng? Nó bảo vệ chống vỡ hay chống trào?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa1', 'input-sa1', '4', 'Các phát biểu a, b, c đúng. (d) Đúng vì nếu tắt đèn trước, nhiệt độ giảm làm áp suất trong bình cầu giảm, có thể gây hiện tượng hút ngược chất lỏng. (e) SAI, đá bọt dùng để điều hòa quá trình hóa hơi, giúp dung dịch sôi đều đặn, tránh hiện tượng quá sôi (trào mạnh) chứ không phải chống vỡ ống kính.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq2" data-time="160">
+                <span class="question-text">Câu 4: Ở bước cuối cùng, ta làm lạnh rồi rót dung dịch NaCl bão hòa vào ống nghiệm chứa hỗn hợp sau phản ứng. Hiện tượng và mục đích của việc này là gì?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. H<sub>2</sub>SO<sub>4</sub> đặc hút nước làm tăng hiệu suất.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Chất lỏng trong ống nghiệm tách thành hai lớp (ester nổi lên trên).</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Dung dịch NaCl bão hòa để tránh phân hủy ester.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Trong ống nghiệm không còn C<sub>2</sub>H<sub>5</sub>OH và CH<sub>3</sub>COOH.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq2"><strong>💡 Câu hỏi gợi mở:</strong> Ester có tan trong nước không? Khối lượng riêng của Ester thường nhẹ hơn hay nặng hơn nước? Việc cho dung dịch NaCl bão hòa vào (làm dung môi phân cực mạnh hơn, nặng hơn) sẽ tác động thế nào đến sự phân lớp của hỗn hợp hữu cơ - vô cơ?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq2', 'B', 'Ethyl acetate không tan trong nước và nhẹ hơn nước. NaCl bão hòa có khối lượng riêng lớn, đồng thời làm giảm độ tan của ester trong nước (hiệu ứng salting-out), giúp ester tách lớp rõ rệt và nổi hoàn toàn lên trên.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq3" data-time="180">
+                <span class="question-text">Câu 5: Khi khảo sát ảnh hưởng của NHIỆT ĐỘ đến khối lượng ester thu được (ở 50°C, 60°C, 70°C). Những yếu tố nào sau đây cần được giữ CỐ ĐỊNH ở cả 3 thí nghiệm?<br>(1) Thời gian; (2) Nồng độ, thể tích ban đầu; (3) Màu sắc; (4) Nhiệt độ.</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. (1) và (2).</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. (2) và (3).</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. (1) và (4).</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. (3) và (4).</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq3"><strong>💡 Câu hỏi gợi mở:</strong> Trong thiết kế thực nghiệm, "Nhiệt độ" đang là Biến độc lập (yếu tố ta chủ động thay đổi để xem tác động). Vậy các thông số đầu vào khác có được phép thay đổi không, hay phải giữ nguyên để đảm bảo kết quả thu được hoàn toàn là do Nhiệt độ tác động?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq3', 'A', 'Theo nguyên tắc thực nghiệm đối chứng, khi khảo sát ảnh hưởng của một biến số (Nhiệt độ), bạn buộc phải kiểm soát (giữ nguyên) tất cả các thông số đầu vào khác như Thời gian phản ứng (1) và Lượng/nồng độ chất tham gia (2).')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">III. Bài tập định lượng thực tế</div>
+
+            <div class="card" id="q-sa2" data-time="200">
+                <span class="question-text">Câu 6: Đun 12 gam acetic acid với 13,8 gam ethanol (có H<sub>2</sub>SO<sub>4</sub> đặc) đến khi đạt trạng thái cân bằng thu được 11 gam ester. Hiệu suất của phản ứng (theo tính toán) là a%. Tính giá trị của a?</span>
+                <input type="text" id="input-sa2" placeholder="Nhập đáp số (VD: 50, 62.5...)">
+                <div class="socratic-hint" id="hint-sa2"><strong>💡 Câu hỏi gợi mở:</strong><br>- Bước 1: Đổi số mol acid (M=60) và ancol (M=46).<br>- Bước 2: So sánh số mol, lượng sản phẩm lý thuyết (100%) phải tính theo chất nào?<br>- Bước 3: M của Ester = 88. Lấy khối lượng thực tế (11g) chia cho khối lượng lý thuyết x 100%.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa2', 'input-sa2', '62.5', 'n(CH<sub>3</sub>COOH) = 12/60 = 0.2 mol; n(C<sub>2</sub>H<sub>5</sub>OH) = 13.8/46 = 0.3 mol. Vì 0.2 < 0.3 nên hiệu suất tính theo acid. Khối lượng ester lý thuyết = 0.2 * 88 = 17.6 gam. Vậy Hiệu suất = (11 / 17.6) * 100% = 62.5%.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa3" data-time="220">
+                <span class="question-text">Câu 7: Biết khi cho 1 mol Acid tác dụng 1 mol Ancol thì lượng ester max thu được lúc cân bằng là 2/3 mol (Tức K<sub>c</sub> = 4). Vậy để đạt hiệu suất cực đại là 80% (tính theo acid) khi tiến hành ester hoá 1 mol CH<sub>3</sub>COOH thì cần sử dụng số mol C<sub>2</sub>H<sub>5</sub>OH là bao nhiêu?</span>
+                <input type="text" id="input-sa3" placeholder="Nhập đáp số (VD: 1.5, 2...)">
+                <div class="socratic-hint" id="hint-sa3"><strong>💡 Câu hỏi gợi mở:</strong> Hiệu suất 80% tính theo acid nghĩa là lượng acid ĐÃ PHẢN ỨNG là 0.8 mol. Kéo theo đó, ancol phản ứng 0.8 mol và ester/nước tạo ra là 0.8 mol.<br>Hãy đặt số mol ancol ban đầu là y. Lúc cân bằng ta còn lại gì? Ráp vào biểu thức: K<sub>c</sub> = [Ester][H<sub>2</sub>O] / ([Acid][Ancol]) = 4 để giải tìm y.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa3', 'input-sa3', '1.6', 'Lúc cân bằng:<br>n(Ester) = n(H<sub>2</sub>O) = 0.8 mol.<br>n(Acid dư) = 1 - 0.8 = 0.2 mol.<br>n(Ancol dư) = y - 0.8 mol.<br>Lắp vào K<sub>c</sub>: (0.8 * 0.8) / (0.2 * (y - 0.8)) = 4<br>&rArr; 0.64 / (0.8y - 0.64) = 4 &rArr; 0.64 = 3.2y - 2.56 &rArr; y = 1.6 mol.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+        function selectOpt(elem) {
+            const parent = elem.closest('.options');
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            elem.classList.add('selected');
+        }
+
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderFeedback(cardId, isCorrect, explanation) {
+            const card = document.getElementById(cardId);
+            const fb = card.querySelector('.feedback');
+            fb.style.display = "block";
+            fb.classList.remove('correct', 'wrong');
+            
+            if (isCorrect) {
+                fb.classList.add('correct');
+                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+            } else {
+                fb.classList.add('wrong');
+                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+            }
+        }
+
+        function checkMCQ(cardId, correctAns, explanation) {
+            const card = document.getElementById(cardId);
+            const sel = card.querySelector('.option.selected');
+            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+        }
+
+        function checkSA(cardId, inputId, correctAns, explanation) {
+            const val = document.getElementById(inputId).value.trim().replace(',', '.'); // Handle comma decimal
+            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+            renderFeedback(cardId, val === correctAns, explanation);
+        }
+
+        function checkTF(cardId, ansArray, explanation) {
+            const card = document.getElementById(cardId);
+            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+            let score = 0, empty = false;
+            
+            names.forEach((n, i) => {
+                const rad = card.querySelector(`input[name="${n}"]:checked`);
+                if(!rad) empty = true;
+                else if(rad.value === ansArray[i]) score++;
+            });
+            
+            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+        }
+
+        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('videoOverlay');
+        
+        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
+        const triggers = [
+            { time: 15, id: 'q-mcq1', triggered: false },
+            { time: 70, id: 'q-tf1', triggered: false },
+            { time: 115, id: 'q-sa1', triggered: false },
+            { time: 160, id: 'q-mcq2', triggered: false },
+            { time: 180, id: 'q-mcq3', triggered: false },
+            { time: 200, id: 'q-sa2', triggered: false },
+            { time: 220, id: 'q-sa3', triggered: false }
+        ];
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+            
+            for (let i = 0; i < triggers.length; i++) {
+                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                    triggers[i].triggered = true;
+                    video.pause();
+                    overlay.classList.add('active');
+                    
+                    // Highlight và Scroll tới câu hỏi
+                    const questionCard = document.getElementById(triggers[i].id);
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break; // Chỉ trigger 1 cái mỗi lần
+                }
+            }
+        });
+
+        function resumeVideo() {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+            video.play();
+        }
+    </script>
+</body>
+</html>

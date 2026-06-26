@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Học Hóa Trực Quan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --gradient-start: #2563eb; --gradient-end: #00d2ff;
+            --dark-bg: #0f172a;
+        }
+        
+        /* Cỡ chữ chuẩn 20px theo yêu cầu */
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: удалено; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+        }
+        
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index:裁00;
+            box-shadow: 0 4px264px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo { 
+            color: white; 
+            text-decoration: none; 
+            font-size: 1.6rem; 
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+        }
+        
+        .logo svg { 
+            width: 36px; 
+            height: 36px; 
+            fill: var(--accent); 
+        }
+        
+        .logo-text { 
+            background: linear-gradient(to right, var(--accent), #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
+        
+        .nav-links { 
+            display: flex; 
+            gap: 1.5rem; 
+            flex-wrap: wrap; 
+        }
+        
+        .nav-links a { 
+            color: #cbd5e1; 
+            text-decoration: none; 
+            font-size: 1rem; 
+            transition: 0.2s; 
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-links a:hover, .nav-links a.active { 
+            color: var(--accent); 
+            font-weight: 600;
+            background-color: rgba(0, 210, 255, 0.1);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
+            color: white;
+            padding: 4rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2300d2ff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--accent), #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #cbd5e1;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Typography & Layout */
+        h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
+        h2 { 
+            font-size: 1.8rem; 
+            color: #0f172a; 
+            border-left: 5px solid var(--primary); 
+            padding-left: 0.8rem; 
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            color: var(--dark-bg);
+            margin-top: IX;
+            margin-bottom: 0.8rem;
+        }
+        
+        .container, main { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 2rem 1rem; 
+            flex: 1; 
+        }
+        
+        .card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 1.8rem; 
+            margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card {
+            border-top: 4px solid var(--accent);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        .btn { 
+            display: inline-block; 
+            background: var(--primary); 
+            color: white; 
+            text-decoration: none; 
+            border: none; 
+            padding: 0.8rem 1.8rem; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+        
+        .btn:hover { 
+            background: var(--primary-hover); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-accent {
+            background: linear-gradient(to right, var(--accent), var(--secondary));
+            border: none;
+        }
+        
+        .btn-accent:hover {
+            background: linear-gradient(to right, var(--accent-hover), var(--secondary-hover));
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 1rem;
+            border-radius: 12px;
+            margin: 3rem 0;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+            text-align: center;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 3rem 1rem;
+            background-color: var(--surface);
+            border-radius: 12px;
+            margin: 3rem 0;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        /* Footer Đồng bộ */
+        footer { 
+            background: var(--dark-bg); 
+            color: #94a3b8; 
+            padding: 2.5rem 1rem 1.5rem; 
+            margin-top: auto; 
+            font-size: 0.9rem; 
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid #334155;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Các class phụ trợ */
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        
+        .highlight {
+            background-color: rgba(0, 210, 255, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mb-0 {
+            margin-bottom: 0;
+        }
+        
+        .mt-0 {
+            margin-top: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                gap: 0.8rem;
+            }
+            
+            nav {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="active"><i class="fas fa-home"></i> Trang chủ</a>
+            <a href="experiment.html"><i class="fas fa-flask"></i> Thí nghiệm</a>
+            <a href="exercise.html"><i class="fas fa-pen-to-square"></i> Bài tập</a>
+            <a href="symbols.html"><i class="fas fa-atom"></i> Ký hiệu</a>
+            <a href="periodic.html"><i class="fas fa-table-cells-large"></i> Bảng tuần hoàn</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Thay Đổi Cách Bạn Phản Ứng Với Hóa Học</h1>
+            <p>Không học thuộc lòng. Không nhồi nhét lý thuyết suông. <strong>WatchNReact</strong> mang đến một không gian nơi bạn tự tay "chạm" vào các khái niệm thông qua việc quan sát thực nghiệm và phân tích tư duy.</p>
+            <a href="experiment.html" class="btn btn-accent" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 50px;">
+                <i class="fas fa-play-circle"></i> Bắt Đầu Trải Nghiệm
+            </a>
+        </div>
+    </section>
+
+    <main class="container">
+        <section class="text-center">
+            <h2>Điều Gì Làm Nên Sự Khác Biệt?</h2>
+            <p>Chúng tôi không chỉ dạy hóa học - chúng tôi giúp bạn trải nghiệm nó</p>
+        </section>
+        
+        <div class="features-grid">
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h3>Phương Pháp Socratic</h3>
+                <p>Hệ thống không cung cấp sẵn đáp án. Thay vào đó, bạn sẽ bị "thách thức" bởi các câu hỏi tương tác hiện ra ngay trong quá trình xem video, buộc não bộ phải vận động và tư duy phản biện.</p>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Học Qua Sai Lầm</h3>
+                <p>Sai lầm là cách học tốt nhất. Dù chọn đúng hay sai, hệ thống sẽ ngay lập tức cung cấp lời giải thích gợi mở bản chất của hiện tượng hóa học, giúp bạn hiểu sâu và nhớ lâu hơn.</p>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h3>Cập Nhật Chuẩn IUPAC Mới</h3>
+                <p>Hệ thống ký hiệu, danh pháp và bảng tuần hoàn được thiết kế đồng bộ theo chương trình Giáo dục Phổ thông mới và tiêu chuẩn quốc tế IUPAC mới nhất.</p>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>Video Thí Nghiệm Thực Tế</h3>
+                <p>Hơn 100 video thí nghiệm chất lượng cao với góc quay đa chiều, cho phép bạn quan sát từng chi tiết của phản ứng hóa học như đang ở trong phòng thí nghiệm.</p>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Theo Dõi Tiến Độ Cá Nhân</h3>
+                <p>Hệ thống theo dõi và phân tích tiến độ học tập của bạn, đề xuất bài học phù hợp với điểm mạnh và điểm yếu của từng cá nhân.</p>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Cộng Đồng Học Tập</h3>
+                <p>Thảo luận, chia sẻ và cùng giải đáp thắc mắc với hàng ngàn học sinh và giáo viên khác trong cộng đồng WatchNReact.</p>
+            </div>
+        </div>
+        
+        <section class="stats-section">
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Thí Nghiệm Trực Quan</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">10K+</div>
+                    <div class="stat-label">Câu Hỏi Tương Tác</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">Học Sinh Tham Gia</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">Hài Lòng Với Phương Pháp</div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="cta-section">
+            <h2>Sẵn Sàng Thay Đổi Cách Học Hóa Của Bạn?</h2>
+            <p>Tham gia cùng hàng ngàn học sinh đã khám phá niềm vui học hóa với WatchNReact. Hoàn toàn miễn phí!</p>
+            <div class="cta-buttons">
+                <a href="experiment.html" class="btn btn-accent">
+                    <i class="fas fa-flask"></i> Khám Phá Thí Nghiệm
+                </a>
+                <a href="exercise.html" class="btn btn-outline">
+                    <i class="fas fa-pen-to-square"></i> Luyện Tập Ngay
+                </a>
+                <a href="periodic.html" class="btn btn-outline">
+                    <i class="fas fa-table-cells-large"></i> Khám Phá Bảng Tuần Hoàn
+                </a>
+            </div>
+        </section>
+        
+        <div class="card">
+            <h2 style="margin-top: 0;">Học Hóa Chưa Bao Giờ Dễ Dàng Đến Thế</h2>
+            <p>Với <span class="highlight">WatchNReact</span>, bạn không chỉ học hóa học - bạn trải nghiệm nó. Mỗi bài học được thiết kế như một cuộc phiêu lưu khám phá, nơi bạn là nhà khoa học thực thụ:</p>
+            <ul>
+                <li><strong>Quan sát</strong> hiện tượng hóa học qua video chất lượng cao</li>
+                <li><strong>Dự đoán</strong> kết quả và giải thích cơ chế phản ứng</li>
+                <li><strong>Tương tác</strong> với hệ thống câu hỏi thông minh</li>
+                <li><strong>Khám phá</strong> ứng dụng thực tế của kiến thức</li>
+                <li><strong>Áp dụng</strong> vào giải quyết vấn đề thực tiễn</li>
+            </ul>
+            <p style="margin-bottom: 0;">Phương pháp này đã được chứng minh giúp học sinh <strong>tăng 40% khả năng ghi nhớ</strong> và <strong>hiểu sâu bản chất</strong> so với phương pháp truyền thống.</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>WatchNReact</h3>
+                <p>Hệ sinh thái học hóa học tương tác, giúp học sinh Việt Nam khám phá niềm vui học hóa qua thực nghiệm và tư duy phản biện.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Liên Kết Nhanh</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Trang chủ</a></li>
+                    <li><a href="experiment.html">Thí nghiệm</a></li>
+                    <li><a href="exercise.html">Bài tập tương tác</a></li>
+                    <li><a href="symbols.html">Ký hiệu hóa học</a></li>
+                    <li><a href="periodic.html">Bảng tuần hoàn</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Tính Năng Nổi Bật</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Học qua video tương tác</a></li>
+                    <li><a href="#">Câu hỏi Socratic</a></li>
+                    <li><a href="#">Phản hồi tức thì</a></li>
+                    <li><a href="#">Theo dõi tiến độ</a></li>
+                    <li><a href="#">Cộng đồng học tập</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác. Tất cả các quyền được bảo lưu.</p>
+        </div>
+    </footer>
+</body>
+</html>

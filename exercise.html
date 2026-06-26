@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Hệ Thống 30 Bài Tập Socratic</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* Navigation */
+        nav { background: var(--dark-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .logo { color: white; text-decoration: none; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .logo i { color: var(--accent); }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #94a3b8; text-decoration: none; font-weight: 500; transition: 0.3s; padding: 0.5rem 1rem; border-radius: 6px; }
+        .nav-links a:hover, .nav-links a.active { color: white; background: rgba(255, 255, 255, 0.1); }
+
+        /* Dashboard */
+        .container { max-width: 1050px; margin: 2rem auto; padding: 0 1rem; flex: 1; }
+        .hub-header { background: linear-gradient(135deg, var(--dark-bg), var(--primary)); color: white; padding: 2.5rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .hub-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .hub-header p { color: #cbd5e1; font-size: 1.05rem; max-width: 700px; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; background: rgba(255, 255, 255, 0.07); padding: 1rem; border-radius: 12px; backdrop-filter: blur(4px); }
+        .stat-item { display: flex; align-items: center; gap: 0.75rem; }
+        .stat-item i { font-size: 1.5rem; color: var(--accent); }
+        .stat-label { font-size: 0.85rem; color: #94a3b8; display: block; }
+        .stat-val { font-size: 1.2rem; font-weight: 700; color: white; }
+
+        /* Filters */
+        .filter-tabs { display: flex; gap: 0.75rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.5rem; }
+        .tab-btn { background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border); padding: 0.6rem 1.2rem; border-radius: 30px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .tab-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+
+        /* Live Question Cards */
+        .question-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: 0.3s; }
+        .question-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
+        .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px dashed var(--border); }
+        .q-tags { display: flex; gap: 0.5rem; }
+        .tag { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 20px; text-transform: uppercase; }
+        .tag-iupac { background: #fee2e2; color: #ef4444; } .tag-calc { background: #e0f2fe; color: #0284c7; } .tag-exp { background: #f3e8ff; color: #a855f7; }
+        .tag-level { background: var(--surface); color: var(--text); }
+        .q-status { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+        .status-waiting { color: var(--warning); } .status-success { color: var(--success); }
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .q-context-box { background: var(--surface); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+        /* Inputs & Options */
+        .options-grid { display: grid; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .opt-label { display: flex; align-items: center; gap: 1rem; background: var(--bg); border: 2px solid var(--border); padding: 1rem; border-radius: 10px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .opt-label:hover { border-color: #cbd5e1; background: var(--surface); }
+        .opt-label input[type="radio"] { width: 1.2rem; height: 1.2rem; accent-color: var(--primary); }
+        .opt-label.selected { border-color: var(--primary); background: #eff6ff; }
+        .input-wrapper { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .input-wrapper input[type="text"] { flex: 1; padding: 0.8rem 1rem; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; font-weight: 600; outline: none; }
+        .input-wrapper input[type="text"]:focus { border-color: var(--primary); }
+        
+        /* Buttons */
+        .btn-action { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-action:hover { background: var(--primary-hover); }
+        .btn-socratic { background: white; color: var(--secondary); border: 2px solid var(--secondary); }
+        .btn-socratic:hover { background: #f5f3ff; }
+
+        /* Socratic Drawer */
+        .socratic-drawer { margin-top: 1.5rem; background: #fafafa; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: none; animation: slideDown 0.3s ease-out forwards; }
+        .socratic-header { background: linear-gradient(135deg, #6d28d9, var(--secondary)); color: white; padding: 0.75rem 1.25rem; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+        .socratic-content { padding: 1.25rem; }
+        .chat-msg { margin-bottom: 1rem; max-width: 85%; }
+        .msg-tutor { background: white; border: 1px solid var(--border); padding: 0.8rem 1rem; border-radius: 4px 12px 12px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .socratic-options { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
+        .socratic-opt-btn { background: white; border: 1px solid #cbd5e1; padding: 0.6rem 1rem; border-radius: 8px; text-align: left; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+        .socratic-opt-btn:hover { border-color: var(--secondary); background: #f5f3ff; color: var(--secondary); }
+
+        /* Feedbacks */
+        .live-feedback { padding: 1rem; border-radius: 10px; margin-top: 1rem; font-weight: 500; display: none; }
+        .feedback-correct { background-color: #dcfce7; color: var(--success); border-left: 4px solid var(--success); }
+        .feedback-incorrect { background-color: #fee2e2; color: var(--danger); border-left: 4px solid var(--danger); }
+        .chemical-eq { font-family: 'Times New Roman', Times, serif; font-style: italic; background: var(--surface); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: bold; }
+
+        footer { background: var(--dark-bg); color: #64748b; text-align: center; padding: 2rem; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo"><i class="fas fa-flask"></i> WatchNReact</a>
+        <div class="nav-links">
+            <a href="index.html">Trang chủ</a>
+            <a href="experiment.html">Thí nghiệm</a>
+            <a href="exercise.html" class="active">Bài tập tương tác</a>
+            <a href="symbols.html">Ký hiệu hóa học</a>
+            <a href="periodic.html">Bảng tuần hoàn</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hub-header">
+            <h1>Trung Tâm Bài Tập Socratic (30 Thử Thách)</h1>
+            <p>Nơi rèn luyện toàn diện các chuyên đề: Este, Carbohydrate, Nitrogen, Điện phân và Chuẩn độ. Tương tác với Trợ lý ảo Socratic để gỡ rối từng bước tư duy!</p>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <i class="fas fa-brain"></i>
+                    <div><span class="stat-label">Chỉ số Tư duy (XP)</span><span class="stat-val" id="score-display">0 XP</span></div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div><span class="stat-label">Tiến độ hoàn thành</span><span class="stat-val" id="progress-display">0 / 30 Câu hỏi</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab-btn active" onclick="filterCategory('all')">Tất cả (30)</button>
+            <button class="tab-btn" onclick="filterCategory('iupac')">Danh pháp & Cấu trúc (10)</button>
+            <button class="tab-btn" onclick="filterCategory('calc')">Tính toán Định lượng (10)</button>
+            <button class="tab-btn" onclick="filterCategory('exp')">Thực nghiệm & Cơ chế (10)</button>
+        </div>
+
+        <div id="questions-container"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // NGÂN HÀNG 30 CÂU HỎI (JSON Data)
+        const questionBank = [
+            // --- DANH PHÁP & CẤU TRÚC (10 CÂU) ---
+            { id: "q1", cat: "iupac", catName: "Danh pháp IUPAC", level: "Thông hiểu", type: "mcq",
+              q: "Câu 1: Gọi tên thay thế theo danh pháp quốc tế của hợp chất thu được từ phản ứng Nitro hóa Toluene?",
+              ctx: "Sản phẩm thế hoàn toàn 3 nhóm nitro vào vòng Toluene tạo kết tủa vàng (TNT).",
+              opts: { A: "1-methyl-2,3,5-trinitrobenzene", B: "2,4,6-trinitrotoluene", C: "1,3,5-trinitrotoluene", D: "2,4,6-trinitrobenzene" },
+              ans: "B", points: 20,
+              socMsg: "Carbon mang nhóm methyl (-CH3) trên vòng Toluene được ưu tiên đánh số 1. Các vị trí ortho/para tương ứng là số mấy?",
+              socOpts: [{ text: "Vị trí 2, 4, 6", isCorrect: true, reply: "Đúng! Nên tên là 2,4,6-trinitrotoluene." }, { text: "Vị trí 3, 5", isCorrect: false }]
+            },
+            { id: "q2", cat: "iupac", catName: "Danh pháp IUPAC", level: "Nhận biết", type: "mcq",
+              q: "Câu 2: Tên gọi chuẩn của este tạo bởi acetic acid ($CH_3COOH$) và ethyl alcohol ($C_2H_5OH$) là gì?",
+              ctx: "Phản ứng đun nóng có xúc tác H2SO4 đặc tạo chất lỏng mùi thơm.",
+              opts: { A: "Methyl acetate", B: "Ethyl formate", C: "Ethyl acetate", D: "Propyl acetate" },
+              ans: "C", points: 10,
+              socMsg: "Tên este = Tên gốc alkyl (từ alcohol) + Tên gốc acid (đổi đuôi ic -> ate). Gốc từ ethyl alcohol là gì?",
+              socOpts: [{ text: "Gốc ethyl", isCorrect: true, reply: "Chuẩn! Ghép lại ta có Ethyl acetate." }, { text: "Gốc methyl", isCorrect: false }]
+            },
+            { id: "q3", cat: "iupac", catName: "Cấu trúc Hóa học", level: "Thông hiểu", type: "mcq",
+              q: "Câu 3: Chất nào sau đây thuộc loại disaccharide nhưng KHÔNG có tính khử (không tráng bạc)?",
+              ctx: "Trong cấu tạo, gốc hemiacetal đã bị khóa trong liên kết glycosidic.",
+              opts: { A: "Maltose", B: "Glucose", C: "Fructose", D: "Saccharose" },
+              ans: "D", points: 10,
+              socMsg: "Disaccharide cấu tạo từ 1 gốc alpha-glucose và 1 gốc beta-fructose qua liên kết 1,2-glycosidic là chất nào?",
+              socOpts: [{ text: "Saccharose (Đường mía)", isCorrect: true, reply: "Đúng! Liên kết này khóa cả 2 nhóm OH hemiacetal nên mất tính khử." }, { text: "Maltose (Đường mạch nha)", isCorrect: false }]
+            },
+            { id: "q4", cat: "iupac", catName: "Cấu trúc Hóa học", level: "Vận dụng", type: "fill",
+              q: "Câu 4: Có bao nhiêu đồng phân cấu tạo este mạch hở có công thức phân tử là $C_4H_8O_2$?",
+              ctx: "Viết các đồng phân bắt đầu từ gốc formate (HCOO-), acetate (CH3COO-)...",
+              ans: "4", points: 20,
+              socMsg: "Hãy liệt kê: HCOO-C3H7 (có 2 nhánh propyl và isopropyl), CH3COO-C2H5 (1 nhánh), và C2H5COO-CH3 (1 nhánh). Tổng là?",
+              socOpts: [{ text: "4 đồng phân", isCorrect: true, reply: "Chính xác! Gồm 4 đồng phân cấu tạo." }, { text: "3 đồng phân", isCorrect: false }]
+            },
+            { id: "q5", cat: "iupac", catName: "Danh pháp Hữu cơ", level: "Thông hiểu", type: "mcq",
+              q: "Câu 5: Hợp chất hữu cơ $C_6H_5NO_2$ có tên gọi là gì?",
+              ctx: "Được tổng hợp từ benzene và HNO3 đặc.",
+              opts: { A: "Aniline", B: "Nitrobenzene", C: "Phenol", D: "Nitrocyclohexane" },
+              ans: "B", points: 10,
+              socMsg: "C6H5- là gốc phenyl (hay vòng benzene). Nhóm -NO2 đọc là gì?",
+              socOpts: [{ text: "Nitro", isCorrect: true, reply: "Đúng! Vậy tên là Nitrobenzene." }, { text: "Amino", isCorrect: false }]
+            },
+            { id: "q6", cat: "iupac", catName: "Đặc điểm Cấu tạo", level: "Thông hiểu", type: "mcq",
+              q: "Câu 6: Tại sao nhiệt độ sôi của este thường thấp hơn nhiều so với acid và alcohol có cùng khối lượng phân tử?",
+              ctx: "Ethyl acetate sôi ở 77°C, trong khi acetic acid sôi ở 118°C.",
+              opts: { A: "Vì este nhẹ hơn nước", B: "Vì este không có liên kết hydrogen liên phân tử", C: "Vì este dễ bị phân hủy", D: "Vì khối lượng este nhỏ" },
+              ans: "B", points: 10,
+              socMsg: "Liên kết hydrogen cần nguyên tử H linh động gắn với O hoặc N (như -OH, -COOH). Este (R-COO-R') có nhóm này không?",
+              socOpts: [{ text: "Không có", isCorrect: true, reply: "Đúng! Không có liên kết hydrogen nên phân tử dễ bay hơi, nhiệt độ sôi thấp." }, { text: "Có nhóm -OH", isCorrect: false }]
+            },
+            { id: "q7", cat: "iupac", catName: "Cấu trúc Hóa học", level: "Thông hiểu", type: "mcq",
+              q: "Câu 7: Công thức hóa học của muối Mohr dùng trong chuẩn độ là gì?",
+              ctx: "Đây là một muối kép chứa sắt (II), ammonium và gốc sulfate ngậm nước.",
+              opts: { A: "$FeSO_4.7H_2O$", B: "$(NH_4)_2Fe(SO_4)_2.6H_2O$", C: "$K_2Cr_2O_7$", D: "$KMnO_4$" },
+              ans: "B", points: 10,
+              socMsg: "Muối kép tức là chứa 2 loại cation khác nhau. Trong các đáp án, chất nào chứa cả ion NH4+ và Fe2+?",
+              socOpts: [{ text: "Đáp án B", isCorrect: true, reply: "Chính xác! Đây là muối Mohr." }, { text: "Đáp án A", isCorrect: false }]
+            },
+            { id: "q8", cat: "iupac", catName: "Danh pháp Hữu cơ", level: "Nhận biết", type: "mcq",
+              q: "Câu 8: Sản phẩm chính khi cho Toluene tác dụng với Bromine khan (xúc tác bột Fe, đun nóng) là hỗn hợp nào?",
+              ctx: "Nhóm -CH3 định hướng thế vào vị trí nào của vòng?",
+              opts: { A: "Chỉ có m-bromotoluene", B: "Hỗn hợp o-bromotoluene và p-bromotoluene", C: "Chỉ có benzyl bromide", D: "Bromocyclohexane" },
+              ans: "B", points: 10,
+              socMsg: "Nhóm đẩy electron (như alkyl -CH3) định hướng phản ứng thế ưu tiên vào các vị trí nào?",
+              socOpts: [{ text: "Ortho và Para", isCorrect: true, reply: "Đúng! Tạo ra hỗn hợp ortho- và para-bromotoluene." }, { text: "Meta", isCorrect: false }]
+            },
+            { id: "q9", cat: "iupac", catName: "Cấu trúc Hóa học", level: "Vận dụng", type: "mcq",
+              q: "Câu 9: Carbohydrate nào sau đây có cấu trúc mạch phân nhánh do chứa cả liên kết alpha-1,4 và alpha-1,6-glycosidic?",
+              ctx: "Là thành phần của tinh bột.",
+              opts: { A: "Amylose", B: "Cellulose", C: "Amylopectin", D: "Saccharose" },
+              ans: "C", points: 10,
+              socMsg: "Trong tinh bột, amylose là mạch thẳng (chỉ có lk 1,4), còn thành phần nào chiếm % lớn hơn và phân nhánh?",
+              socOpts: [{ text: "Amylopectin", isCorrect: true, reply: "Hoàn toàn chính xác!" }, { text: "Amylose", isCorrect: false }]
+            },
+            { id: "q10", cat: "iupac", catName: "Công thức Phân tử", level: "Nhận biết", type: "mcq",
+              q: "Câu 10: Khí X sinh ra ở anode trong phương pháp điện phân dung dịch NaCl có màng ngăn là khí gì?",
+              ctx: "Khí màu vàng lục, mùi xốc, độc.",
+              opts: { A: "Oxygen", B: "Hydrogen", C: "Chlorine", D: "Nitrogen" },
+              ans: "C", points: 10,
+              socMsg: "Ở anode (+), ion âm Cl- bị oxi hóa mất electron để tạo ra chất khí nguyên tố. Đó là khí gì?",
+              socOpts: [{ text: "Chlorine (Cl2)", isCorrect: true, reply: "Chính xác!" }, { text: "Hydrogen (H2)", isCorrect: false }]
+            },
+
+            // --- TÍNH TOÁN ĐỊNH LƯỢNG (10 CÂU) ---
+            { id: "q11", cat: "calc", catName: "Tính toán Este", level: "Vận dụng", type: "mcq",
+              q: "Câu 11: Đun nóng 6,0g $CH_3COOH$ với 6,9g $C_2H_5OH$ (xúc tác $H_2SO_4$ đặc). Thu được 6,6g este. Tính hiệu suất?",
+              ctx: "Tính theo chất có số mol nhỏ hơn.",
+              opts: { A: "50%", B: "66,7%", C: "75%", D: "80%" },
+              ans: "C", points: 30,
+              socMsg: "Số mol acid = 0,1 mol. Số mol alcohol = 0,15 mol. Tính theo acid. Este lý thuyết tối đa là 0,1 mol (8,8 gam). Thực tế có 6,6 gam. H% bằng bao nhiêu?",
+              socOpts: [{ text: "(6,6 / 8,8) * 100 = 75%", isCorrect: true, reply: "Đúng! Hiệu suất là 75%." }, { text: "(6,6 / 0,15) * 100", isCorrect: false }]
+            },
+            { id: "q12", cat: "calc", catName: "Điện phân Thực tế", level: "Vận dụng cao", type: "fill",
+              q: "Câu 12: Điện phân dung dịch NaCl công nghiệp: Nạp 1 m³/h dung dịch NaCl 310 g/L; Rút ra 0,8 m³/h dung dịch NaCl 200 g/L. Tính nồng độ NaOH (g/L) thu ở buồng cathode biết lưu lượng nước ra là 0,3 m³/h? (Nhập số nguyên)",
+              ctx: "Sử dụng định luật bảo toàn khối lượng chất tan NaCl phản ứng.",
+              ans: "342", points: 40,
+              socMsg: "Lượng NaCl phản ứng trong 1 giờ = (1000*310) - (800*200) = 150 kg. Số mol NaOH sinh ra = mol NaCl phản ứng. Hãy tính m(NaOH) rồi chia cho 300 Lít?",
+              socOpts: [{ text: "102.56 kg / 300 L ≈ 342 g/L", isCorrect: true, reply: "Tuyệt đỉnh! Đáp án là 342." }, { text: "150 kg / 300 L = 500", isCorrect: false }]
+            },
+            { id: "q13", cat: "calc", catName: "Chuẩn độ Oxi hóa", level: "Vận dụng", type: "mcq",
+              q: "Câu 13: Cần 12,5 mL dung dịch $KMnO_4$ 0,02M để chuẩn độ hết 10,0 mL dung dịch $Fe^{2+}$ trong môi trường acid. Tính nồng độ của dung dịch $Fe^{2+}$?",
+              ctx: "Tỉ lệ phản ứng $MnO_4^- : Fe^{2+} = 1 : 5$.",
+              opts: { A: "0,025 M", B: "0,125 M", C: "0,250 M", D: "0,050 M" },
+              ans: "B", points: 30,
+              socMsg: "Số mol KMnO4 = 0,00025 mol. Số mol Fe2+ bằng 5 lần lượng đó = 0,00125 mol. Chia cho 0,01 Lít sẽ ra bao nhiêu?",
+              socOpts: [{ text: "0,125 M", isCorrect: true, reply: "Chính xác!" }, { text: "0,025 M", isCorrect: false }]
+            },
+            { id: "q14", cat: "calc", catName: "Phản ứng Tráng Bạc", level: "Vận dụng", type: "fill",
+              q: "Câu 14: Cho 18,0 gam Glucose phản ứng hoàn toàn với thuốc thử Tollens dư. Khối lượng bạc (Ag) thu được là bao nhiêu gam? (M Ag = 108, Glucose = 180)",
+              ctx: "1 phân tử Glucose có 1 nhóm -CHO, sinh ra 2 Ag.",
+              ans: "21.6", points: 20,
+              socMsg: "Số mol glucose = 18/180 = 0,1 mol. Sinh ra 0,2 mol Ag. Khối lượng Ag là 0,2 * 108 = ?",
+              socOpts: [{ text: "21,6 gam", isCorrect: true, reply: "Chính xác!" }, { text: "10,8 gam", isCorrect: false }]
+            },
+            { id: "q15", cat: "calc", catName: "Xà phòng hóa", level: "Vận dụng", type: "fill",
+              q: "Câu 15: Xà phòng hóa hoàn toàn 8,8 gam ethyl acetate bằng dung dịch NaOH vừa đủ. Cô cạn dung dịch sau phản ứng thu được bao nhiêu gam muối khan?",
+              ctx: "Muối thu được là CH3COONa (M=82).",
+              ans: "8.2", points: 20,
+              socMsg: "Số mol este = 8,8 / 88 = 0,1 mol. Số mol muối CH3COONa tạo thành cũng là 0,1 mol. Khối lượng muối = 0,1 * 82 = ?",
+              socOpts: [{ text: "8,2 gam", isCorrect: true, reply: "Chính xác!" }, { text: "6,8 gam", isCorrect: false }]
+            },
+            { id: "q16", cat: "calc", catName: "Định luật Faraday", level: "Vận dụng", type: "mcq",
+              q: "Câu 16: Điện phân dung dịch NaCl có màng ngăn, dòng điện I = 10A trong 2 giờ. Khối lượng dung dịch giảm đi bao nhiêu gam? (Bỏ qua nước bay hơi)",
+              ctx: "Khối lượng giảm = Khối lượng Cl2 + Khối lượng H2. (n_e = It/96500 = 0,746 mol).",
+              opts: { A: "13,6g", B: "20,4g", C: "27,2g", D: "34,0g" },
+              ans: "C", points: 30,
+              socMsg: "n_e = 0,746 mol. Mol Cl2 = 0,373 mol. Mol H2 = 0,373 mol. Tổng m = 0,373*71 + 0,373*2 = ?",
+              socOpts: [{ text: "27,2 gam", isCorrect: true, reply: "Hoàn toàn chính xác!" }, { text: "34,0 gam", isCorrect: false }]
+            },
+            { id: "q17", cat: "calc", catName: "Tính toán Carbohydrate", level: "Vận dụng cao", type: "fill",
+              q: "Câu 17: Tính khối lượng Cellulose trinitrate (thuốc nổ vô khói) thu được khi cho 1,62 tấn cellulose phản ứng với HNO3 dư (Hiệu suất 80%). (Làm tròn đến 2 chữ số thập phân, đơn vị: tấn)",
+              ctx: "Cellulose [C6H7O2(OH)3]n -> Cellulose trinitrate [C6H7O2(ONO2)3]n. (M: 162 -> 297).",
+              ans: "2.38", points: 40,
+              socMsg: "Khối lượng lý thuyết = 1,62 * (297 / 162) = 2,97 tấn. Nhân với hiệu suất 80% (0,8) = ?",
+              socOpts: [{ text: "2,376 tấn (≈2,38)", isCorrect: true, reply: "Chính xác! Làm tròn 2.38." }, { text: "2,97 tấn", isCorrect: false }]
+            },
+            { id: "q18", cat: "calc", catName: "Lên men Rượu", level: "Vận dụng", type: "fill",
+              q: "Câu 18: Lên men 180 gam Glucose thành Ethanol (hiệu suất 80%). Khí CO2 sinh ra được hấp thụ hết vào nước vôi trong dư. Tính khối lượng kết tủa CaCO3 (gam) thu được?",
+              ctx: "C6H12O6 -> 2 C2H5OH + 2 CO2.",
+              ans: "160", points: 30,
+              socMsg: "n(glucose) = 1 mol. Lý thuyết ra 2 mol CO2. H=80% nên chỉ có 1,6 mol CO2. Suy ra 1,6 mol CaCO3. Khối lượng = 1,6 * 100 = ?",
+              socOpts: [{ text: "160 gam", isCorrect: true, reply: "Chính xác!" }, { text: "200 gam", isCorrect: false }]
+            },
+            { id: "q19", cat: "calc", catName: "Tính toán Nitro hóa", level: "Vận dụng", type: "mcq",
+              q: "Câu 19: Để điều chế Nitrobenzene, cho 15,6 gam Benzene phản ứng với HNO3 dư. Thu được 19,68 gam Nitrobenzene. Tính hiệu suất?",
+              ctx: "M(Benzene)=78, M(Nitrobenzene)=123.",
+              opts: { A: "60%", B: "70%", C: "80%", D: "90%" },
+              ans: "C", points: 30,
+              socMsg: "Mol Benzene = 15,6/78 = 0,2 mol. Mol Nitrobenzene lý thuyết = 0,2 * 123 = 24,6 gam. H% = (19,68 / 24,6) * 100 = ?",
+              socOpts: [{ text: "80%", isCorrect: true, reply: "Đúng!" }, { text: "90%", isCorrect: false }]
+            },
+            { id: "q20", cat: "calc", catName: "Chuẩn độ % Khối lượng", level: "Vận dụng cao", type: "fill",
+              q: "Câu 20: Cân 0,6 gam mẫu quặng Siderite chứa $FeCO_3$. Hòa tan và chuẩn độ bằng dung dịch $KMnO_4$ 0,025M tốn 25,2 mL. Tính % khối lượng $FeCO_3$ trong quặng? (Nhập số thập phân 1 chữ số, ví dụ 60.9)",
+              ctx: "Bảo toàn electron: 5 Fe2+ phản ứng với 1 MnO4-. M(FeCO3) = 116.",
+              ans: "60.9", points: 40,
+              socMsg: "Mol KMnO4 = 0,00063 mol -> Mol Fe2+ = 0,00315 mol. m(FeCO3) = 0,00315 * 116 = 0,3654 g. % = (0,3654 / 0,6) * 100 = ?",
+              socOpts: [{ text: "60.9%", isCorrect: true, reply: "Tuyệt vời!" }, { text: "75.0%", isCorrect: false }]
+            },
+
+            // --- THỰC NGHIỆM & CƠ CHẾ (10 CÂU) ---
+            { id: "q21", cat: "exp", catName: "Cơ chế Tráng Bạc", level: "Vận dụng cao", type: "mcq",
+              q: "Câu 21: Thủy phân Saccharose rồi đem sản phẩm đi tráng bạc. Lượng Bạc sinh ra gấp bao nhiêu lần so với phản ứng tráng bạc bằng lượng Glucose tương đương?",
+              ctx: "Saccharose thủy phân sinh ra 1 Glucose + 1 Fructose.",
+              opts: { A: "Bằng nhau", B: "Gấp 2 lần", C: "Gấp 3 lần", D: "Gấp 4 lần" },
+              ans: "B", points: 30,
+              socMsg: "1 Glucose -> 2 Ag. Thủy phân 1 Saccharose tạo 1 Glu + 1 Fruc -> Tổng là 4 Ag. Vậy so với 1 Glucose ban đầu thì gấp mấy?",
+              socOpts: [{ text: "Gấp 2 lần (4 so với 2)", isCorrect: true, reply: "Đúng!" }, { text: "Gấp 4 lần", isCorrect: false }]
+            },
+            { id: "q22", cat: "exp", catName: "Thực hành Hữu cơ", level: "Thông hiểu", type: "mcq",
+              q: "Câu 22: Trong thí nghiệm este hóa, vai trò của việc thêm dung dịch NaCl bão hòa vào ống nghiệm sau phản ứng là gì?",
+              ctx: "NaCl bão hòa có khối lượng riêng lớn.",
+              opts: { A: "Tránh phân hủy sản phẩm", B: "Làm chất xúc tác", C: "Hút nước đẩy cân bằng", D: "Làm este tách lớp nổi lên trên" },
+              ans: "D", points: 20,
+              socMsg: "Nước muối bão hòa rất nặng, este lại nhẹ và không tan. Thêm NaCl vào sẽ giúp hiện tượng gì rõ rệt hơn?",
+              socOpts: [{ text: "Tách lớp este", isCorrect: true, reply: "Chính xác! Este sẽ nổi rõ lên trên bề mặt." }, { text: "Bảo quản este", isCorrect: false }]
+            },
+            { id: "q23", cat: "exp", catName: "Thực hành Vô cơ", level: "Thông hiểu", type: "mcq",
+              q: "Câu 23: Trong công nghiệp điện phân NaCl tạo NaOH, tại sao phải dùng màng ngăn xốp (màng trao đổi ion)?",
+              ctx: "Màng này nằm giữa Anode và Cathode.",
+              opts: { A: "Để ngăn không cho $Cl_2$ phản ứng với NaOH tạo nước Javel", B: "Để tăng tốc độ điện phân", C: "Để tạo ra khí $H_2$ tinh khiết", D: "Để giảm nhiệt độ dung dịch" },
+              ans: "A", points: 20,
+              socMsg: "Nếu không có màng, Cl2 từ anode sẽ trộn lẫn với dung dịch khu vực cathode (chứa NaOH) sinh ra phản ứng phụ. Phản ứng đó tạo ra gì?",
+              socOpts: [{ text: "Nước Javel (NaClO + NaCl)", isCorrect: true, reply: "Đúng! Màng ngăn chặn điều này để thu NaOH tinh khiết." }, { text: "Nước muối", isCorrect: false }]
+            },
+            { id: "q24", cat: "exp", catName: "Thực hành Phân tích", level: "Thông hiểu", type: "mcq",
+              q: "Câu 24: Tại sao KHÔNG dùng acid HCl để tạo môi trường trong phép chuẩn độ $Fe^{2+}$ bằng $KMnO_4$?",
+              ctx: "Thuốc tím KMnO4 là chất oxi hóa rất mạnh.",
+              opts: { A: "HCl là acid yếu", B: "Ion $Cl^-$ có thể bị $KMnO_4$ oxi hóa thành $Cl_2$ làm sai lệch kết quả", C: "HCl tạo kết tủa với Fe", D: "HCl làm mất màu thuốc tím quá nhanh" },
+              ans: "B", points: 20,
+              socMsg: "KMnO4 mạnh đến mức có thể oxi hóa Cl- trong HCl thành khí Cl2. Điều này sẽ tiêu tốn thêm lượng KMnO4 ngoài phản ứng với Fe2+.",
+              socOpts: [{ text: "Gây sai số chuẩn độ (Tốn thêm KMnO4)", isCorrect: true, reply: "Chuẩn xác! Nên người ta thường dùng H2SO4 loãng." }, { text: "Tạo tủa", isCorrect: false }]
+            },
+            { id: "q25", cat: "exp", catName: "Thực hành Hữu cơ", level: "Nhận biết", type: "mcq",
+              q: "Câu 25: Trong thí nghiệm điều chế Nitrobenzene, chất lỏng thu được sau khi làm nguội có đặc điểm gì?",
+              ctx: "Màu sắc và tỷ trọng so với nước.",
+              opts: { A: "Màu đỏ, tan trong nước", B: "Màu vàng nhạt, nặng hơn nước, chìm xuống dưới", C: "Không màu, nhẹ hơn nước, nổi lên trên", D: "Kết tủa trắng" },
+              ans: "B", points: 20,
+              socMsg: "Nitrobenzene là chất lỏng có khối lượng riêng lớn hơn 1 g/cm3. Nó sẽ chìm hay nổi?",
+              socOpts: [{ text: "Màu vàng, nặng hơn nước", isCorrect: true, reply: "Chính xác!" }, { text: "Không màu, nhẹ hơn", isCorrect: false }]
+            },
+            { id: "q26", cat: "exp", catName: "Thực hành Phân tích", level: "Nhận biết", type: "mcq",
+              q: "Câu 26: Dấu hiệu nhận biết Điểm tương đương (kết thúc chuẩn độ) trong thí nghiệm chuẩn độ muối $Fe^{2+}$ bằng $KMnO_4$ là gì?",
+              ctx: "Nhỏ từ từ dung dịch KMnO4 từ Burette xuống bình tam giác.",
+              opts: { A: "Xuất hiện kết tủa đen", B: "Dung dịch chuyển sang màu hồng nhạt bền trong khoảng 20-30 giây", C: "Dung dịch mất màu hoàn toàn", D: "Sủi bọt khí mạnh" },
+              ans: "B", points: 10,
+              socMsg: "Khi toàn bộ Fe2+ đã bị oxi hóa, chỉ cần 1 giọt dư KMnO4 rơi xuống, dung dịch không có chất để khử thuốc tím nữa nên sẽ giữ lại màu gì?",
+              socOpts: [{ text: "Màu hồng nhạt (của thuốc tím loãng)", isCorrect: true, reply: "Đúng!" }, { text: "Màu trong suốt", isCorrect: false }]
+            },
+            { id: "q27", cat: "exp", catName: "Thực hành Hữu cơ", level: "Thông hiểu", type: "mcq",
+              q: "Câu 27: Hóa chất nào được dùng để chuẩn bị thuốc thử Tollens (phức bạc ammonia) trong thí nghiệm tráng gương Carbohydrate?",
+              ctx: "Thuốc thử Tollens cần pha chế tươi ngay trước khi dùng.",
+              opts: { A: "Dung dịch $AgNO_3$ và $NaOH$", B: "Dung dịch $AgNO_3$ và $NH_3$", C: "Dung dịch $AgCl$ và $NH_3$", D: "Dung dịch $AgNO_3$ và $HNO_3$" },
+              ans: "B", points: 10,
+              socMsg: "Hòa tan kết tủa Ag2O ban đầu bằng một dung dịch base yếu tạo phức [Ag(NH3)2]+. Đó là base nào?",
+              socOpts: [{ text: "Dung dịch NH3", isCorrect: true, reply: "Chuẩn xác!" }, { text: "Dung dịch NaOH", isCorrect: false }]
+            },
+            { id: "q28", cat: "exp", catName: "Cơ chế Phản ứng", level: "Thông hiểu", type: "mcq",
+              q: "Câu 28: Tại sao phản ứng este hóa giữa acid và alcohol là phản ứng thuận nghịch (hai chiều), nhưng phản ứng xà phòng hóa este trong môi trường kiềm lại là phản ứng một chiều?",
+              ctx: "Chú ý sản phẩm của phản ứng xà phòng hóa là muối và alcohol.",
+              opts: { A: "Vì kiềm làm đứt gãy hoàn toàn este", B: "Vì muối sinh ra ($RCOONa$) không thể phản ứng ngược với alcohol để tạo lại este", C: "Vì nhiệt độ xà phòng hóa rất cao", D: "Vì alcohol bay hơi ngay lập tức" },
+              ans: "B", points: 20,
+              socMsg: "Để phản ứng ngược xảy ra (tạo lại este), cần có Acid (H+) kết hợp với Alcohol. Nhưng kiềm lại sinh ra Muối (ion RCOO-). Muối này có khả năng phản ứng este hóa không?",
+              socOpts: [{ text: "Không, do không có proton H+", isCorrect: true, reply: "Đúng! Nên phản ứng xà phòng hóa là một chiều." }, { text: "Có, nó vẫn phản ứng được", isCorrect: false }]
+            },
+            { id: "q29", cat: "exp", catName: "Thực hành Điện phân", level: "Vận dụng", type: "mcq",
+              q: "Câu 29: Nếu điện phân dung dịch $CuSO_4$ với điện cực trơ, pH của dung dịch thay đổi như thế nào trong quá trình điện phân?",
+              ctx: "Sản phẩm tại Anode là gì?",
+              opts: { A: "Tăng dần", B: "Giảm dần", C: "Không đổi", D: "Tăng rồi giảm" },
+              ans: "B", points: 30,
+              socMsg: "Tại Anode (+), H2O bị điện phân sinh ra khí O2 và ion H+. Sự tích tụ của H+ làm môi trường trở nên thế nào?",
+              socOpts: [{ text: "Tính acid tăng -> pH giảm", isCorrect: true, reply: "Tuyệt vời!" }, { text: "Tính base tăng -> pH tăng", isCorrect: false }]
+            },
+            { id: "q30", cat: "exp", catName: "Thực hành Hữu cơ", level: "Vận dụng", type: "mcq",
+              q: "Câu 30: Để phân biệt trực tiếp Glucose và Fructose, hóa chất nào sau đây phản ứng với Glucose nhưng KHÔNG phản ứng với Fructose?",
+              ctx: "Dựa vào tính chất của nhóm chức Aldehyde (-CHO).",
+              opts: { A: "Thuốc thử Tollens ($AgNO_3/NH_3$)", B: "$Cu(OH)_2$ ở nhiệt độ thường", C: "Nước Bromine ($Br_2/H_2O$)", D: "$H_2$ (xúc tác Ni, t°)" },
+              ans: "C", points: 30,
+              socMsg: "Trong môi trường base (như NH3), Fructose chuyển hóa thành Glucose nên vẫn tráng bạc. Nhưng trong môi trường acid nhẹ hoặc trung tính như dung dịch Bromine, nhóm ketone của Fructose có bị oxi hóa không?",
+              socOpts: [{ text: "Không", isCorrect: true, reply: "Đúng! Nước Bromine chỉ oxi hóa nhóm Aldehyde của Glucose làm mất màu, dùng để phân biệt rất tốt." }, { text: "Có", isCorrect: false }]
+            }
+        ];
+
+        let score = 0;
+        let solvedSet = new Set();
+
+        // RENDER GIAO DIỆN CÂU HỎI BẰNG JAVASCRIPT
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = ''; // Clear
+
+            questionBank.forEach((qObj, index) => {
+                const card = document.createElement('div');
+                card.className = `question-card`;
+                card.setAttribute('data-category', qObj.cat);
+                card.id = qObj.id;
+
+                let tagClass = 'tag-' + qObj.cat;
+
+                // Build HTML for Input/Options
+                let interactionHTML = '';
+                if(qObj.type === 'mcq') {
+                    interactionHTML = `<div class="options-grid">`;
+                    for(const [key, val] of Object.entries(qObj.opts)) {
+                        interactionHTML += `
+                            <div class="opt-label" onclick="selectRadio(this)">
+                                <input type="radio" name="opts-${qObj.id}" value="${key}"> ${key}. ${val}
+                            </div>
+                        `;
+                    }
+                    interactionHTML += `</div>`;
+                } else if(qObj.type === 'fill') {
+                    interactionHTML = `
+                        <div class="input-wrapper" style="margin-bottom: 1.5rem;">
+                            <input type="text" id="input-${qObj.id}" placeholder="Nhập đáp án của bạn (ví dụ: số liệu)...">
+                        </div>
+                    `;
+                }
+
+                // Build Socratic Options
+                let socOptionsHTML = '';
+                qObj.socOpts.forEach((so, i) => {
+                    socOptionsHTML += `<button class="socratic-opt-btn" onclick="socraticAction(this, '${qObj.id}', ${so.isCorrect}, '${so.reply}')">${so.text}</button>`;
+                });
+
+                card.innerHTML = `
+                    <div class="q-meta">
+                        <div class="q-tags">
+                            <span class="tag ${tagClass}">${qObj.catName}</span>
+                            <span class="tag tag-level">${qObj.level}</span>
+                        </div>
+                        <div class="q-status status-waiting"><i class="far fa-clock"></i> Chưa hoàn thành</div>
+                    </div>
+                    <div class="q-text">${qObj.q}</div>
+                    <div class="q-context-box"><i class="fas fa-info-circle"></i> <strong>Gợi ý/Bối cảnh:</strong> ${qObj.ctx}</div>
+                    
+                    ${interactionHTML}
+
+                    <div style="display:flex; gap: 0.75rem;">
+                        <button class="btn-action" onclick="checkAnswer('${qObj.id}')"><i class="fas fa-paper-plane"></i> Nộp đáp án</button>
+                        <button class="btn-action btn-socratic" onclick="toggleSocratic('${qObj.id}')"><i class="fas fa-robot"></i> Trợ lý Socratic</button>
+                    </div>
+
+                    <div class="socratic-drawer" id="soc-${qObj.id}">
+                        <div class="socratic-header"><i class="fas fa-lightbulb"></i> Định hướng Tư duy</div>
+                        <div class="socratic-content">
+                            <div class="chat-msg msg-tutor">
+                                <div>${qObj.socMsg}</div>
+                                <div class="socratic-options">${socOptionsHTML}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="live-feedback" id="feedback-${qObj.id}"></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // TƯƠNG TÁC GIAO DIỆN
+        function selectRadio(element) {
+            const grid = element.parentElement;
+            grid.querySelectorAll('.opt-label').forEach(item => {
+                item.classList.remove('selected');
+                const r = item.querySelector('input[type="radio"]');
+                if(r) r.checked = false;
+            });
+            element.classList.add('selected');
+            element.querySelector('input[type="radio"]').checked = true;
+        }
+
+        function toggleSocratic(qId) {
+            const drawer = document.getElementById(`soc-${qId}`);
+            drawer.style.display = (drawer.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function socraticAction(btn, qId, isCorrect, replyMsg) {
+            const container = btn.parentElement.parentElement;
+            // Add user choice
+            const userMsg = document.createElement('div');
+            userMsg.style.textAlign = 'right'; userMsg.style.margin = '0.5rem 0';
+            userMsg.innerHTML = `<span style="background: var(--secondary); color:white; padding: 0.5rem 1rem; border-radius:12px 12px 4px 12px; display:inline-block; font-size:0.9rem;">${btn.innerText}</span>`;
+            container.appendChild(userMsg);
+            
+            btn.parentElement.remove(); // Remove options
+
+            setTimeout(() => {
+                const tutorMsg = document.createElement('div');
+                tutorMsg.className = 'chat-msg msg-tutor';
+                tutorMsg.style.borderLeft = isCorrect ? '4px solid var(--success)' : '4px solid var(--warning)';
+                tutorMsg.innerHTML = `<div><strong>💡 ${isCorrect ? 'Tuyệt vời:' : 'Cẩn thận:'}</strong> ${replyMsg}</div>`;
+                container.appendChild(tutorMsg);
+            }, 300);
+        }
+
+        // KIỂM TRA ĐÁP ÁN
+        function checkAnswer(qId) {
+            const qObj = questionBank.find(q => q.id === qId);
+            const feedback = document.getElementById(`feedback-${qId}`);
+            feedback.style.display = 'block';
+            let isCorrect = false;
+
+            if(qObj.type === 'mcq') {
+                const checked = document.querySelector(`input[name="opts-${qId}"]:checked`);
+                if(!checked) {
+                    feedback.className = "live-feedback feedback-incorrect";
+                    feedback.innerText = "Vui lòng chọn một đáp án trước khi nộp!";
+                    return;
+                }
+                isCorrect = (checked.value === qObj.ans);
+            } else if(qObj.type === 'fill') {
+                const inputVal = document.getElementById(`input-${qId}`).value.trim().replace(',', '.');
+                if(inputVal === '') {
+                    feedback.className = "live-feedback feedback-incorrect";
+                    feedback.innerText = "Vui lòng nhập đáp án!";
+                    return;
+                }
+                isCorrect = (inputVal === qObj.ans);
+            }
+
+            if(isCorrect) {
+                feedback.className = "live-feedback feedback-correct";
+                feedback.innerHTML = `<strong>🎉 Hoàn toàn chính xác! (+${qObj.points} XP)</strong>`;
+                if(!solvedSet.has(qId)) {
+                    solvedSet.add(qId);
+                    score += qObj.points;
+                    updateHUD(qId);
+                }
+            } else {
+                feedback.className = "live-feedback feedback-incorrect";
+                feedback.innerHTML = `Chưa chính xác. Hãy nhấp vào <strong>Trợ lý Socratic</strong> để phân tích lại nhé!`;
+            }
+        }
+
+        function updateHUD(qId) {
+            document.getElementById('score-display').innerText = score + " XP";
+            document.getElementById('progress-display').innerText = solvedSet.size + " / 30 Câu hỏi";
+            const card = document.getElementById(qId);
+            const stBox = card.querySelector('.q-status');
+            stBox.className = "q-status status-success";
+            stBox.innerHTML = `<i class="fas fa-check-circle"></i> Đã hoàn thành`;
+        }
+
+        function filterCategory(cat) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.style.display = (cat === 'all' || card.getAttribute('data-category') === cat) ? 'block' : 'none';
+            });
+        }
+
+        // Khởi chạy khi load trang
+        window.onload = () => {
+            renderQuestions();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Phản ứng Tráng Gương</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Main Container Layout */
+        .layout-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .layout-container { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Video & Header */
+        .video-section { position: sticky; top: 90px; height: fit-content; }
+        .page-title { color: var(--text); font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .page-title span { color: var(--primary); }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        video { width: 100%; display: block; }
+
+        .video-overlay-msg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10;
+        }
+        .video-overlay-msg.active { opacity: 1; pointer-events: auto; }
+        .video-overlay-msg h3 { margin: 0 0 1rem 0; color: var(--accent); font-size: 1.5rem; }
+
+        /* Right Column: Interactive Questions */
+        .questions-section { padding-bottom: 2rem; }
+        
+        .section-tag {
+            display: inline-block; background: var(--surface); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
+            margin: 2rem 0 1rem 0; border: 1px solid var(--border);
+        }
+        .section-tag:first-child { margin-top: 0; }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .card.active-question {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.15);
+            transform: translateX(-5px);
+        }
+
+        .card.active-question::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px; background: var(--accent);
+        }
+
+        .question-text { font-weight: 600; font-size: 1.1rem; margin-bottom: 1.2rem; display: block; color: var(--text); }
+        
+        /* Multiple Choice Options */
+        .options { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;}
+        .option { 
+            padding: 12px 16px; border: 2px solid var(--border); border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1rem; background: var(--card-bg); 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .option:hover { border-color: #cbd5e1; background: var(--surface); }
+        .option.selected { border-color: var(--primary); background: #eff6ff; font-weight: 500; }
+        .option.selected::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary); }
+
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; 
+            font-size: 1rem; outline: none; transition: 0.2s; margin-bottom: 1.5rem; box-sizing: border-box;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        /* True/False Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: var(--surface); font-weight: 600; color: var(--text); }
+        td:nth-child(2) { white-space: nowrap; text-align: center;}
+
+        /* Buttons & Feedback */
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; 
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-hint { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-hint:hover { background: #e2e8f0; color: var(--warning); transform: translateY(-2px); }
+
+        .socratic-hint {
+            display: none; background: #fffbeb; border-left: 4px solid var(--warning);
+            padding: 1rem; margin-top: 1rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #92400e; margin-bottom: 1.5rem;
+        }
+
+        .feedback { 
+            display: none; margin-top: 1.5rem; padding: 1.2rem; 
+            border-radius: 8px; font-size: 0.95rem; line-height: 1.6; 
+        }
+        .feedback.correct { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .feedback.wrong { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem; text-align: center; font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="experiment.html"><i class="fas fa-arrow-left"></i> Trở về danh sách</a>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="video-section">
+            <h1 class="page-title">Video 4: <span>Phản Ứng Tráng Gương</span></h1>
+            <p class="page-subtitle"><b>Nội dung cốt lõi:</b> Hóa hữu cơ - Carbohydrate</p>
+            <p class="page-subtitle"><b>Nguồn:</b> Kênh YouTube Mr. Skeleton Thí Nghiệm</p>
+            
+            <div class="video-wrapper">
+                <video id="mainVideo" controls controlsList="nodownload">
+                    <source src="Thí nghiệm 4 - Tráng gương.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://youtu.be/FMJCHP2dP04" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                        <i class="fab fa-youtube"></i> Xem Video Gốc (YouTube)
+                    </a>
+                </div>
+                <div class="video-overlay-msg" id="videoOverlay">
+                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
+                <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
+                Video sẽ tự động dừng lại ở những khoảnh khắc quan trọng. Khi đó, một câu hỏi kiểm tra tư duy sẽ xuất hiện bên phải. Hãy cố gắng phân tích và tự trả lời trước khi xem tiếp.
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <div class="section-tag">I. Nhận diện phản ứng & Hiện tượng</div>
+            
+            <div class="card" id="q-mcq1" data-time="15">
+                <span class="question-text">Câu 1: Glucose dùng trong công nghiệp để tráng bạc lên bề mặt thuỷ tinh trong sản xuất ruột phích. Glucose phản ứng với thuốc thử Tollens theo phương trình: <br><br>CH₂OH[CHOH]₄CH=O + 2[Ag(NH₃)₂]OH &#8594; X + 2Ag↓ + 3NH₃ + H₂O. <br><br>Chất X là gì?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Khí carbon dioxide.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Ammonium carbonate.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Ammonium gluconate.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Gluconic acid.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq1"><strong>💡 Câu hỏi gợi mở:</strong> Glucose có nhóm chức -CHO (aldehyde). Dưới tác dụng của thuốc thử Tollens (một chất oxi hóa nhẹ trong môi trường base NH₃), nhóm -CHO sẽ bị oxi hóa thành nhóm -COOH, nhưng do đang ở trong môi trường base (NH₃) nên nó lập tức chuyển thành muối amonium (-COONH₄). Nhóm muối đó tên là gì?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq1', 'C', 'Chất X thu được là muối amonium gluconate (CH₂OH[CHOH]₄COONH₄). Nhóm aldehyde (-CHO) đã bị oxi hóa tạo thành nhóm muối carboxylate trong môi trường base.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq2" data-time="45">
+                <span class="question-text">Câu 2: Để tráng một lớp bạc lên ruột phích, người ta cho chất Z phản ứng với lượng dư dung dịch AgNO₃ trong NH₃, đun nóng. Chất Z là:</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Glucose.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Ethanol.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Acetic acid.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Saccharose.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq2"><strong>💡 Câu hỏi gợi mở:</strong> Để tham gia phản ứng tráng bạc (Tollens), phân tử hợp chất hữu cơ buộc phải chứa nhóm chức phân tử aldehyde (-CHO) hoặc formate (HCOO-). Trong 4 chất trên, chất nào là carbohydrate có cấu trúc chứa nhóm aldehyde tự do?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq2', 'A', 'Glucose (C₆H₁₂O₆) ở dạng mạch hở có chứa 1 nhóm chức aldehyde (-CHO) nên dễ dàng tham gia phản ứng tráng bạc. Saccharose không có nhóm -CHO tự do nên không có phản ứng này.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq3" data-time="70">
+                <span class="question-text">Câu 3: Tiến hành thí nghiệm theo các bước sau:<br>
+                Bước 1: Cho 1 mL dung dịch AgNO₃ 1% vào ống nghiệm sạch.<br>
+                Bước 2: Thêm từ từ từng giọt dung dịch NH₃, lắc đều cho đến khi kết tủa tan hết.<br>
+                Bước 3: Thêm tiếp khoảng 1 mL dung dịch glucose 1% vào ống nghiệm; đun nóng nhẹ.<br>
+                Phát biểu nào sau đây <b>SAI</b>?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Sản phẩm hữu cơ thu được sau bước 3 là ammonium gluconate.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Thí nghiệm trên chứng minh glucose có tính chất của polyalcohol.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Sau bước 3, có lớp bạc kim loại bám trên thành ống nghiệm.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Trong phản ứng ở bước 3, glucose đóng vai trò là chất khử.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq3"><strong>💡 Câu hỏi gợi mở:</strong> Phản ứng tráng bạc là phản ứng đặc trưng dùng để nhận biết nhóm chức nào trong hóa hữu cơ? Nhóm polyalcohol (nhiều -OH liền kề) hay nhóm aldehyde (-CHO)?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq3', 'B', 'Phát biểu B sai. Phản ứng tráng bạc chứng minh sự tồn tại của nhóm chức aldehyde (-CHO) trong phân tử glucose, chứ không phản ánh tính chất của các nhóm chức polyalcohol (-OH liền kề). Tính chất polyalcohol được chứng minh qua phản ứng với Cu(OH)₂ tạo dung dịch xanh lam.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">II. Kỹ thuật tiến hành & Biện luận Đ/S</div>
+
+            <div class="card" id="q-sa1" data-time="110">
+                <span class="question-text">Câu 4: Theo dõi kĩ quy trình thí nghiệm vừa rồi. Cho các phát biểu sau: <br>
+                1. Sản phẩm hữu cơ thu được sau bước 3 là sorbitol. <br>
+                2. Thí nghiệm trên chứng minh glucose có tính chất của aldehyde.<br>
+                3. Sau bước 3, có lớp bạc kim loại sáng bóng bám trên thành ống nghiệm.<br>
+                4. Ở bước 3, có thể thay việc đun nóng nhẹ trực tiếp bằng cách ngâm ống nghiệm trong cốc nước nóng.<br>
+                <br>Số phát biểu <b>ĐÚNG</b> là bao nhiêu?</span>
+                <input type="text" id="input-sa1" placeholder="Nhập một số nguyên (VD: 1, 2, 3...)">
+                <div class="socratic-hint" id="hint-sa1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy soát lại ý số 1. Sorbitol thu được khi cộng Hydrogen (H₂) vào phân tử glucose (phản ứng khử glucose). Còn ở thí nghiệm này, Tollens đóng vai trò oxi hóa glucose. Vậy sản phẩm hữu cơ có phải là sorbitol không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa1', 'input-sa1', '3', 'Có 3 phát biểu đúng là (2), (3) và (4). Phát biểu (1) SAI vì sản phẩm hữu cơ sinh ra là muối amonium gluconate, không phải là sorbitol.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-tf1" data-time="150">
+                <span class="question-text">Câu 5 (Biện luận Đ/S): Để chế tạo gương soi, ruột phích, người ta phủ lên thủy tinh một lớp bạc mỏng. Lớp bạc này thường được tạo thành từ phản ứng tráng bạc của glucose theo các bước:<br>
+                - Bước 1: Cho 1 mL dung dịch AgNO₃ 1% vào ống nghiệm sạch.<br>
+                - Bước 2: Thêm từ từ từng giọt dung dịch NH₃ 5%, lắc đều cho đến khi kết tủa vừa tan hết.<br>
+                - Bước 3: Thêm tiếp vào ống nghiệm 1 mL dung dịch glucose 2%; lắc đều rồi để ống nghiệm cố định trong cốc nước ấm.</span>
+                <table>
+                    <tr><th>Phát biểu biện luận</th><th>Chọn</th></tr>
+                    <tr>
+                        <td>a) Sau bước 2, trong dung dịch có chứa phức chất hòa tan [Ag(NH₃)₂]OH.</td>
+                        <td><label><input type="radio" name="tfa" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfa" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>b) Thí nghiệm trên chứng minh glucose có tính chất của một polyalcohol đa chức.</td>
+                        <td><label><input type="radio" name="tfb" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfb" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>c) Nếu thay thế dung dịch glucose bằng nước mía tươi thì phản ứng tráng bạc vẫn xảy ra.</td>
+                        <td><label><input type="radio" name="tfc" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfc" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>d) Để tráng gương soi (0,35 m², dày 0,1 µm, D_Ag = 10,49 g/cm³) đun 26,77g glucose (H = 80%). Số lượng gương tối đa sản xuất được khoảng 70 chiếc.</td>
+                        <td><label><input type="radio" name="tfd" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfd" value="S"> S</label></td>
+                    </tr>
+                </table>
+                <div class="socratic-hint" id="hint-tf1"><strong>💡 Câu hỏi gợi mở:</strong><br>- (c): Nước mía thành phần chủ yếu là Saccharose. Saccharose có mở vòng tạo nhóm -CHO tự do được không?<br>- (d): Tính thể tích 1 chiếc gương = S * h = (0.35 * 10⁴ cm²) * (0.1 * 10⁻⁴ cm) = 0.035 cm³. Khối lượng 1 gương = V * D = 0.035 * 10.49 = 0.36715 g Ag. <br>Khối lượng Ag tạo ra từ 26.77g gluco (hiệu suất 80%): n(Glu) = 0.1487 mol -> n(Ag) = 0.1487 * 2 * 0.8 = 0.238 mol. m(Ag thu được) = 25.7g. Chia m(Ag) cho khối lượng 1 gương xem được bao nhiêu chiếc?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkTF('q-tf1', ['Đ', 'S', 'S', 'Đ'], 'Phát biểu a, d ĐÚNG. Phát biểu b SAI vì đây là tính chất của aldehyde. Phát biểu c SAI vì nước mía chứa saccharose, cấu trúc không có nhóm aldehyde tự do để tráng bạc (phải thủy phân trước). Phát biểu d, sau khi tính toán lượng Ag từ 26.77g glucose với H=80% chia cho lượng Ag/1 gương sẽ được xấp xỉ 70 chiếc.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-tf1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">III. Bài tập định lượng thực tế</div>
+
+            <div class="card" id="q-sa2" data-time="180">
+                <span class="question-text">Câu 6: Cho 18,0 gam glucose phản ứng hoàn toàn với lượng dư dung dịch thuốc thử Tollens (AgNO₃ trong NH₃, đun nóng), thu được m gam kết tủa Ag kim loại bám hoàn toàn trên thành bình. Giá trị của m tìm được bằng bao nhiêu?</span>
+                <input type="text" id="input-sa2" placeholder="Nhập đáp số (VD: 10.8, 21.6...)">
+                <div class="socratic-hint" id="hint-sa2"><strong>💡 Câu hỏi gợi mở:</strong><br>1. Tính số mol glucose (M = 180).<br>2. Theo phương trình: 1 mol Glucose (1 nhóm -CHO) tráng ra được mấy mol Ag?<br>3. Tìm số mol Ag và nhân với khối lượng mol của Bạc (M = 108).</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa2', 'input-sa2', '21.6', 'n(Glucose) = 18.0 / 180 = 0.1 mol. Tỉ lệ phản ứng: 1 mol Glucose sinh ra 2 mol Ag. Vậy n(Ag) = 0.2 mol. Khối lượng m = 0.2 * 108 = 21.6 gam.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa3" data-time="220">
+                <span class="question-text">Câu 7: Một phòng thí nghiệm cần xác định nồng độ của mẫu glucose. Cho 50 mL dung dịch glucose chưa rõ nồng độ tác dụng với một lượng dư AgNO₃ trong dung dịch NH₃, kết thúc thí nghiệm thu được 2,16 gam bạc kết tủa. Xác định nồng độ mol (mol/L) của dung dịch glucose đã dùng?</span>
+                <input type="text" id="input-sa3" placeholder="Nhập đáp số nồng độ (VD: 0.1, 0.2...)">
+                <div class="socratic-hint" id="hint-sa3"><strong>💡 Câu hỏi gợi mở:</strong><br>Đây là bài toán ngược so với Câu 6. <br>- Bước 1: Tính số mol Ag sinh ra từ 2.16 gam kết tủa.<br>- Bước 2: Chia đôi số mol Ag (do tỉ lệ 1 Gluco -> 2 Ag) để tìm số mol Glucose tham gia phản ứng.<br>- Bước 3: Đổi 50 mL ra đơn vị Lít. Nồng độ C_M = n / V.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa3', 'input-sa3', '0.2', 'n(Ag) = 2.16 / 108 = 0.02 mol. Vì 1 mol glucose tạo 2 mol Ag nên n(Glucose) = 0.01 mol. Thể tích dung dịch V = 0.05 Lít. Vậy nồng độ mol C_M = 0.01 / 0.05 = 0.2 M.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+        function selectOpt(elem) {
+            const parent = elem.closest('.options');
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            elem.classList.add('selected');
+        }
+
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderFeedback(cardId, isCorrect, explanation) {
+            const card = document.getElementById(cardId);
+            const fb = card.querySelector('.feedback');
+            fb.style.display = "block";
+            fb.classList.remove('correct', 'wrong');
+            
+            if (isCorrect) {
+                fb.classList.add('correct');
+                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+            } else {
+                fb.classList.add('wrong');
+                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+            }
+        }
+
+        function checkMCQ(cardId, correctAns, explanation) {
+            const card = document.getElementById(cardId);
+            const sel = card.querySelector('.option.selected');
+            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+        }
+
+        function checkSA(cardId, inputId, correctAns, explanation) {
+            const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
+            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+            renderFeedback(cardId, val === correctAns, explanation);
+        }
+
+        function checkTF(cardId, ansArray, explanation) {
+            const card = document.getElementById(cardId);
+            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+            let score = 0, empty = false;
+            
+            names.forEach((n, i) => {
+                const rad = card.querySelector(`input[name="${n}"]:checked`);
+                if(!rad) empty = true;
+                else if(rad.value === ansArray[i]) score++;
+            });
+            
+            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+        }
+
+        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('videoOverlay');
+        
+        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
+        const triggers = [
+            { time: 15, id: 'q-mcq1', triggered: false },
+            { time: 45, id: 'q-mcq2', triggered: false },
+            { time: 70, id: 'q-mcq3', triggered: false },
+            { time: 110, id: 'q-sa1', triggered: false },
+            { time: 150, id: 'q-tf1', triggered: false },
+            { time: 180, id: 'q-sa2', triggered: false },
+            { time: 220, id: 'q-sa3', triggered: false }
+        ];
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+            
+            for (let i = 0; i < triggers.length; i++) {
+                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                    triggers[i].triggered = true;
+                    video.pause();
+                    overlay.classList.add('active');
+                    
+                    // Highlight và Scroll tới câu hỏi
+                    const questionCard = document.getElementById(triggers[i].id);
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break; 
+                }
+            }
+        });
+
+        function resumeVideo() {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+            video.play();
+        }
+    </script>
+</body>
+</html>

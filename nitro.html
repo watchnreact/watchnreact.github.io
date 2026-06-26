@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Phản ứng Nitro hóa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Main Container Layout */
+        .layout-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .layout-container { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Video & Header */
+        .video-section { position: sticky; top: 90px; height: fit-content; }
+        .page-title { color: var(--text); font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .page-title span { color: var(--primary); }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        video { width: 100%; display: block; }
+
+        .video-overlay-msg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10;
+        }
+        .video-overlay-msg.active { opacity: 1; pointer-events: auto; }
+        .video-overlay-msg h3 { margin: 0 0 1rem 0; color: var(--accent); font-size: 1.5rem; }
+
+        /* Right Column: Interactive Questions */
+        .questions-section { padding-bottom: 2rem; }
+        
+        .section-tag {
+            display: inline-block; background: var(--surface); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
+            margin: 2rem 0 1rem 0; border: 1px solid var(--border);
+        }
+        .section-tag:first-child { margin-top: 0; }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .card.active-question {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.15);
+            transform: translateX(-5px);
+        }
+
+        .card.active-question::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px; background: var(--accent);
+        }
+
+        .question-text { font-weight: 600; font-size: 1.1rem; margin-bottom: 1.2rem; display: block; color: var(--text); }
+        
+        /* Multiple Choice Options */
+        .options { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;}
+        .option { 
+            padding: 12px 16px; border: 2px solid var(--border); border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1rem; background: var(--card-bg); 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .option:hover { border-color: #cbd5e1; background: var(--surface); }
+        .option.selected { border-color: var(--primary); background: #eff6ff; font-weight: 500; }
+        .option.selected::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary); }
+
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; 
+            font-size: 1rem; outline: none; transition: 0.2s; margin-bottom: 1.5rem; box-sizing: border-box;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        /* True/False Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: var(--surface); font-weight: 600; color: var(--text); }
+        td:nth-child(2) { white-space: nowrap; text-align: center;}
+
+        /* Buttons & Feedback */
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; 
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-hint { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-hint:hover { background: #e2e8f0; color: var(--warning); transform: translateY(-2px); }
+
+        .socratic-hint {
+            display: none; background: #fffbeb; border-left: 4px solid var(--warning);
+            padding: 1rem; margin-top: 1rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #92400e; margin-bottom: 1.5rem;
+        }
+
+        .feedback { 
+            display: none; margin-top: 1.5rem; padding: 1.2rem; 
+            border-radius: 8px; font-size: 0.95rem; line-height: 1.6; 
+        }
+        .feedback.correct { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .feedback.wrong { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem; text-align: center; font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="experiment.html"><i class="fas fa-arrow-left"></i> Trở về danh sách</a>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="video-section">
+            <h1 class="page-title">Video 2: <span>Phản Ứng Nitro Hóa</span></h1>
+            <p class="page-subtitle"><b>Nguồn:</b> Kênh YouTube Hóa học ABC</p>
+            <p class="page-subtitle">Khảo sát phản ứng thế electrophile vào vòng benzene.</p>
+            
+            <div class="video-wrapper">
+                <video id="mainVideo" controls controlsList="nodownload">
+                    <source src="Thí nghiệm 2 - Nitro hóa benzene.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://www.youtube.com/watch?v=XbGIzzYkNvc" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                        <i class="fab fa-youtube"></i> Xem Video Gốc (YouTube)
+                    </a>
+                </div>
+                <div class="video-overlay-msg" id="videoOverlay">
+                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
+                <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
+                Video sẽ tự động dừng lại ở những khoảnh khắc quan trọng. Khi đó, một câu hỏi kiểm tra tư duy sẽ xuất hiện bên phải. Hãy cố gắng phân tích và tự trả lời trước khi xem tiếp.
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <div class="section-tag">I. Nhận diện phản ứng & Hiện tượng</div>
+            
+            <div class="card" id="q-mcq1" data-time="15">
+                <span class="question-text">Câu 1: Cho sơ đồ phản ứng thế: C<sub>6</sub>H<sub>6</sub> + HNO<sub>3</sub> đặc &#8594; X + H<sub>2</sub>O (xúc tác H<sub>2</sub>SO<sub>4</sub> đặc, t°). Công thức cấu tạo của chất hữu cơ X là gì?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. C<sub>6</sub>H<sub>4</sub>(NO<sub>2</sub>)<sub>2</sub>.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. C<sub>6</sub>H<sub>3</sub>(NO<sub>2</sub>)<sub>3</sub>.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. C<sub>6</sub>H<sub>5</sub>(NO<sub>2</sub>)<sub>2</sub>.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. C<sub>6</sub>H<sub>5</sub>NO<sub>2</sub>.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy nhìn vào tên phản ứng là "nitro hóa". Nhóm chức nitro là -NO<sub>2</sub>. Khi thay thế 1 nguyên tử H trên vòng benzene (C<sub>6</sub>H<sub>6</sub>) bằng 1 nhóm -NO<sub>2</sub>, công thức phân tử mới sẽ là gì?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq1', 'D', 'Benzene tác dụng với hỗn hợp HNO3 đặc và H2SO4 đặc sinh ra nitrobenzene (C6H5NO2) do 1 nguyên tử H trên vòng thơm bị thay thế bởi 1 nhóm thế -NO2.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq2" data-time="45">
+                <span class="question-text">Câu 2: Hiện tượng quan sát được trực quan ngay khi cho benzene lắc mạnh với hỗn hợp dung dịch HNO<sub>3</sub> (đặc) / H<sub>2</sub>SO<sub>4</sub> (đặc) ở nhiệt độ phòng là gì?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Sủi bọt khí mạnh.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Toàn bộ dung dịch lập tức đồng nhất hóa chuyển hẳn sang màu vàng rực.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Xuất hiện kết tủa vàng đậm.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Không thấy hiện tượng gì (chất lỏng phân lớp do benzene không tan).</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq2"><strong>💡 Câu hỏi gợi mở:</strong> Benzene là một hydrocarbon không phân cực, nhẹ hơn nước và không tan trong nước cũng như các dung dịch acid vô cơ phân cực. Vậy khi vừa mới cho vào (nhiệt độ thường), chúng có hòa lẫn và phản ứng mạnh với nhau ngay lập tức hay không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq2', 'D', 'Benzene không phân cực nên không tan trong hỗn hợp acid vô cơ. Do nhẹ hơn, benzene sẽ nổi lên trên tạo thành hiện tượng phân lớp rõ rệt. Cần phải có tác động đun nóng (thủy nhiệt 60°C) và khuấy đều thì phản ứng mới xảy ra đáng kể.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq3" data-time="90">
+                <span class="question-text">Câu 3: Đun cách thủy hỗn hợp benzene và 2 acid đặc đến 80°C kèm ống sinh hàn hồi lưu. Nhận định nào sau đây <b>KHÔNG</b> đúng?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Sinh hàn hồi lưu có tác dụng ngưng tụ các chất lỏng bay hơi cho trở lại bình phản ứng.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Chất lỏng trong phễu chiết tách thành 2 lớp, lớp trên là sản phẩm phản ứng, lớp dưới là acid.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Nếu thay benzene bằng toluene thì phản ứng xảy ra dễ hơn, nhưng không thu được nitrobenzene.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Phản ứng xảy ra trong thí nghiệm thuộc loại phản ứng cộng nhóm nitro vào vòng benzene.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq3"><strong>💡 Câu hỏi gợi mở:</strong> Nhóm -NO<sub>2</sub> đã lấy chỗ của một nguyên tử H trên vòng thơm để tạo ra sản phẩm, trong khi hệ liên hợp thơm của vòng benzene (3 liên kết pi xen kẽ) vẫn được bảo toàn nguyên vẹn. Quá trình "đổi chỗ" này được gọi là phản ứng "thế" hay "cộng"?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq3', 'D', 'Nhận định D sai vì phản ứng giữa benzene và hỗn hợp HNO3/H2SO4 đặc là phản ứng THẾ ELECTROPHILE vào vòng thơm, không phải phản ứng cộng. Cấu trúc hệ thơm của benzene được bảo toàn.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">II. Phân tích cơ chế & Thí nghiệm</div>
+
+            <div class="card" id="q-sa1" data-time="135">
+                <span class="question-text">Câu 4: Cho các phát biểu về thí nghiệm nitro hóa benzene sau:</span>
+                <ul style="font-size: 0.95rem; color: var(--text); margin-bottom: 1rem;">
+                    <li>(1) Thuộc loại phản ứng thế ở vòng thơm.</li>
+                    <li>(2) H<sub>2</sub>SO<sub>4</sub> đặc làm xúc tác và hút nước.</li>
+                    <li>(3) Hỗn hợp sau phản ứng để nguội phân thành 2 lớp rõ rệt.</li>
+                    <li>(4) Lớp chất lỏng màu vàng nhạt, nặng hơn nước lắng dưới đáy là nitrobenzene.</li>
+                    <li>(5) Nếu thay benzene bằng toluene thì phản ứng sẽ diễn ra khó khăn hơn.</li>
+                </ul>
+                <p style="margin-top:0; font-weight: bold;">Số nhận định ĐÚNG là bao nhiêu?</p>
+                <input type="text" id="input-sa1" placeholder="Nhập một số nguyên (VD: 1, 2, 3...)">
+                <div class="socratic-hint" id="hint-sa1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy xem xét ý (5). Toluene có nhóm methyl (-CH<sub>3</sub>) gắn vào vòng benzene. Đây là một nhóm đẩy electron, làm tăng mật độ electron của hệ thơm. Điều này khiến các tác nhân mang điện tích dương (electrophile) tấn công vào vòng dễ hơn hay khó hơn so với benzene không có nhóm đẩy?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa1', 'input-sa1', '4', 'Có 4 nhận định đúng là (1), (2), (3) và (4). Nhận định (5) SAI vì nhóm -CH3 là nhóm đẩy electron, làm vòng benzene của toluene giàu electron hơn, do đó phản ứng thế electrophile sẽ xảy ra DỄ DÀNG hơn so với benzene.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-tf1" data-time="180">
+                <span class="question-text">Câu 5 (Biện luận Đ/S): Phân tích quy trình tách chiết hỗn hợp. Cho 30 ml dung dịch HNO<sub>3</sub> đặc và 25 mL H<sub>2</sub>SO<sub>4</sub> đặc vào bình cầu, làm lạnh rồi nhỏ từng giọt benzene vào, duy trì lắc đều ở nhiệt độ 60°C trong 1 giờ. Để nguội bình, sau đó rót hỗn hợp phản ứng vào phễu chiết, hỗn hợp tách thành hai lớp. Tách bỏ phần acid ở bên dưới. Rửa phần chất lỏng còn lại bằng dung dịch sodium carbonate, sau đó rửa bằng nước, thu được chất lỏng nặng hơn nước, có màu vàng nhạt.</span>
+                <table>
+                    <tr><th>Phát biểu biện luận</th><th>Chọn</th></tr>
+                    <tr>
+                        <td>a) Chất lỏng màu vàng nhạt thu được là nitrobenzene.</td>
+                        <td><label><input type="radio" name="tfa" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfa" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>b) Sulfuric acid có vai trò chất xúc tác.</td>
+                        <td><label><input type="radio" name="tfb" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfb" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>c) Đã xảy ra phản ứng thế vào vòng benzene.</td>
+                        <td><label><input type="radio" name="tfc" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfc" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>d) Một học sinh thay HNO<sub>3</sub> bằng dung dịch NaNO<sub>3</sub> nhưng vẫn giữ nguyên các điều kiện khác. Thí nghiệm vẫn tạo nitrobenzene với hiệu suất không đổi.</td>
+                        <td><label><input type="radio" name="tfd" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfd" value="S"> S</label></td>
+                    </tr>
+                </table>
+                <div class="socratic-hint" id="hint-tf1"><strong>💡 Câu hỏi gợi mở:</strong><br>- Ion H<sup>+</sup> từ H<sub>2</sub>SO<sub>4</sub> phản ứng với phân tử HNO<sub>3</sub> đặc để tạo ra ion nitronium (NO<sub>2</sub><sup>+</sup>) siêu hoạt động. Nếu dùng NaNO<sub>3</sub> dạng dung dịch loãng (chứa nhiều nước), H<sub>2</sub>SO<sub>4</sub> sẽ bị loãng ra, liệu có đủ khả năng tạo ra ion NO<sub>2</sub><sup>+</sup> cần thiết cho phản ứng không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkTF('q-tf1', ['Đ', 'Đ', 'Đ', 'S'], 'Phát biểu a, b, c ĐÚNG. Phát biểu d SAI vì dung dịch NaNO3 chứa nhiều nước sẽ làm loãng H2SO4 đặc, khiến quá trình tạo ra tác nhân electrophile NO2+ bị cản trở, phản ứng thế sẽ không diễn ra.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-tf1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">III. Bài tập định lượng</div>
+
+            <div class="card" id="q-sa2" data-time="210">
+                <span class="question-text">Câu 6: Khi cho benzene tác dụng với hỗn hợp HNO<sub>3</sub> đặc và H<sub>2</sub>SO<sub>4</sub> đặc (tỉ lệ mol 1:1), nguyên tử hydrogen trong vòng benzene bị thế bởi nhóm nitro tạo thành sản phẩm hữu cơ X. Khối lượng phân tử (tính theo đơn vị amu) của sản phẩm X là bao nhiêu?</span>
+                <input type="text" id="input-sa2" placeholder="Nhập một số nguyên...">
+                <div class="socratic-hint" id="hint-sa2"><strong>💡 Câu hỏi gợi mở:</strong> Phân tử benzene là C<sub>6</sub>H<sub>6</sub>. Nếu mất đi 1 nguyên tử H (1 amu) và thêm vào 1 nhóm -NO<sub>2</sub> (N: 14, O: 16x2 = 46 amu). Bạn hãy cộng lại xem tổng khối lượng phân tử mới là bao nhiêu nhé.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa2', 'input-sa2', '123', 'Sản phẩm X là Nitrobenzene (C6H5NO2). M = 12×6 + 1×5 + 14 + 16×2 = 123 amu.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa3" data-time="240">
+                <span class="question-text">Câu 7: Để điều chế nitrobenzene, người ta cho 15,6 gam benzene phản ứng hoàn toàn với một lượng dư hỗn hợp HNO<sub>3</sub> đặc và H<sub>2</sub>SO<sub>4</sub> đặc ở nhiệt độ thích hợp. Sau khi kết thúc phản ứng, người ta thu được 19,68 gam nitrobenzene nguyên chất. Hiệu suất của quá trình điều chế trên là a%. Tính giá trị của a?</span>
+                <input type="text" id="input-sa3" placeholder="Nhập đáp số (VD: 60, 75.5...)">
+                <div class="socratic-hint" id="hint-sa3"><strong>💡 Câu hỏi gợi mở:</strong><br>- Bước 1: Tính số mol benzene (M=78) mang đi phản ứng.<br>- Bước 2: Theo phương trình tỉ lệ 1:1, số mol nitrobenzene (M=123) sinh ra theo lý thuyết (nếu hiệu suất 100%) là bao nhiêu mol? Tương đương bao nhiêu gam?<br>- Bước 3: Lấy khối lượng thực tế (19,68g) chia cho khối lượng lý thuyết để tìm hiệu suất.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa3', 'input-sa3', '80', 'n(Benzene) = 15,6 / 78 = 0,2 mol. Theo PT, n(Nitrobenzene lý thuyết) = 0,2 mol. Khối lượng nitrobenzene lý thuyết (100%) = 0,2 × 123 = 24,6 gam. Hiệu suất a = (19,68 / 24,6) × 100% = 80%.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+        function selectOpt(elem) {
+            const parent = elem.closest('.options');
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            elem.classList.add('selected');
+        }
+
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderFeedback(cardId, isCorrect, explanation) {
+            const card = document.getElementById(cardId);
+            const fb = card.querySelector('.feedback');
+            fb.style.display = "block";
+            fb.classList.remove('correct', 'wrong');
+            
+            if (isCorrect) {
+                fb.classList.add('correct');
+                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+            } else {
+                fb.classList.add('wrong');
+                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+            }
+        }
+
+        function checkMCQ(cardId, correctAns, explanation) {
+            const card = document.getElementById(cardId);
+            const sel = card.querySelector('.option.selected');
+            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+        }
+
+        function checkSA(cardId, inputId, correctAns, explanation) {
+            const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
+            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+            renderFeedback(cardId, val === correctAns, explanation);
+        }
+
+        function checkTF(cardId, ansArray, explanation) {
+            const card = document.getElementById(cardId);
+            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+            let score = 0, empty = false;
+            
+            names.forEach((n, i) => {
+                const rad = card.querySelector(`input[name="${n}"]:checked`);
+                if(!rad) empty = true;
+                else if(rad.value === ansArray[i]) score++;
+            });
+            
+            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+        }
+
+        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('videoOverlay');
+        
+        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
+        const triggers = [
+            { time: 15, id: 'q-mcq1', triggered: false },
+            { time: 45, id: 'q-mcq2', triggered: false },
+            { time: 90, id: 'q-mcq3', triggered: false },
+            { time: 135, id: 'q-sa1', triggered: false },
+            { time: 180, id: 'q-tf1', triggered: false },
+            { time: 210, id: 'q-sa2', triggered: false },
+            { time: 240, id: 'q-sa3', triggered: false }
+        ];
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+            
+            for (let i = 0; i < triggers.length; i++) {
+                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                    triggers[i].triggered = true;
+                    video.pause();
+                    overlay.classList.add('active');
+                    
+                    // Highlight và Scroll tới câu hỏi
+                    const questionCard = document.getElementById(triggers[i].id);
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break; 
+                }
+            }
+        });
+
+        function resumeVideo() {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+            video.play();
+        }
+    </script>
+</body>
+</html>

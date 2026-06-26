@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Ký Hiệu Quốc Tế</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --gradient-start: #2563eb; --gradient-end: #00d2ff;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--accent), #a855f7);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+
+        .page-header p { color: #cbd5e1; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* Main Content */
+        main { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 3rem 1.5rem; 
+            flex: 1; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Cards Grid */
+        .symbols-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .symbol-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .symbol-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .symbol-icon {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .symbol-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .symbol-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Modal (Popup) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 1rem;
+        }
+        
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-width: 550px;
+            border-radius: 16px; padding: 2.5rem 2rem; position: relative;
+            transform: translateY(20px); transition: transform 0.3s ease;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            max-height: 90vh; overflow-y: auto;
+        }
+        
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        
+        .close-btn {
+            position: absolute; top: 1rem; right: 1rem; background: var(--surface);
+            border: none; width: 36px; height: 36px; border-radius: 50%;
+            font-size: 1.2rem; color: var(--text-muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        
+        .close-btn:hover { background: #fee2e2; color: var(--danger); }
+        
+        .modal-icon {
+            font-size: 3rem; font-weight: bold; color: var(--accent);
+            text-align: center; margin-bottom: 0.5rem; font-family: 'Times New Roman', Times, serif;
+        }
+        
+        .modal-title { text-align: center; font-size: 1.4rem; font-weight: bold; margin-bottom: 1.5rem; color: var(--text); }
+        
+        .modal-body-section {
+            margin-bottom: 1.2rem; background: var(--surface);
+            padding: 1.2rem; border-radius: 12px; border-left: 4px solid var(--accent);
+        }
+        
+        .modal-body-section h4 {
+            margin: 0 0 0.5rem 0; font-size: 0.95rem; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .modal-body-section p { margin: 0; font-size: 1rem; color: var(--text); }
+
+        /* Footer */
+        footer { 
+            background: var(--dark-bg); color: #94a3b8; padding: 2.5rem 1rem 1.5rem; 
+            margin-top: auto; font-size: 0.9rem; 
+        }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .footer-section h3 { color: white; font-size: 1.2rem; margin-bottom: 1rem; }
+        .footer-links { list-style: none; padding: 0; }
+        .footer-links li { margin-bottom: 0.5rem; }
+        .footer-links a { color: #94a3b8; text-decoration: none; transition: 0.2s; }
+        .footer-links a:hover { color: var(--accent); }
+        .copyright { text-align: center; padding-top: 1.5rem; border-top: 1px solid #334155; max-width: 1200px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html"><i class="fas fa-home"></i> Trang chủ</a>
+            <a href="experiment.html"><i class="fas fa-flask"></i> Thí nghiệm</a>
+            <a href="exercise.html"><i class="fas fa-pen-to-square"></i> Bài tập</a>
+            <a href="symbols.html" class="active"><i class="fas fa-atom"></i> Ký hiệu</a>
+            <a href="periodic.html"><i class="fas fa-table-cells-large"></i> Bảng tuần hoàn</a>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Từ Điển Ký Hiệu Hóa Học</h1>
+        <p>Hệ thống danh pháp IUPAC và ký hiệu áp dụng xuyên suốt chương trình GDPT môn Hóa học mới. Bấm vào từng thẻ để xem chi tiết.</p>
+    </header>
+
+    <main>
+        <div class="symbols-grid">
+            <div class="symbol-card" 
+                data-symbol="(s)" 
+                data-name="Solid / Chất rắn" 
+                data-meaning="Thể hiện trạng thái rắn của chất trong phương trình phản ứng." 
+                data-details="Trong phương trình ion thu gọn, chất rắn (kết tủa) không bị phân ly. Trong một số ngữ cảnh có thể dùng ký hiệu mũi tên đi xuống (&darr;) thay thế để nhấn mạnh sự tạo thành kết tủa."
+                data-example="Ví dụ: AgCl(s), Cu(s), CaCO<sub>3</sub>(s)">
+                <div class="symbol-icon">(s)</div>
+                <div class="symbol-title">Chất rắn</div>
+                <div class="symbol-subtitle">Solid</div>
+            </div>
+            
+            <div class="symbol-card" 
+                data-symbol="(l)" 
+                data-name="Liquid / Chất lỏng" 
+                data-meaning="Dùng cho chất lỏng nguyên chất hoặc dung môi tinh khiết." 
+                data-details="Dung môi lỏng tinh khiết (như H<sub>2</sub>O) có nồng độ được coi là không đổi trong quá trình phản ứng, do đó thường không được đưa vào biểu thức tính hằng số cân bằng K<sub>c</sub>."
+                data-example="Ví dụ: H<sub>2</sub>O(l), Br<sub>2</sub>(l), Hg(l)">
+                <div class="symbol-icon">(l)</div>
+                <div class="symbol-title">Chất lỏng</div>
+                <div class="symbol-subtitle">Liquid</div>
+            </div>
+            
+            <div class="symbol-card" 
+                data-symbol="(g)" 
+                data-name="Gas / Chất khí" 
+                data-meaning="Thể hiện chất ở trạng thái khí, có khả năng bay hơi hoặc khuếch tán trong không gian." 
+                data-details="Với các phản ứng có chất khí tham gia, ta thường dùng hằng số cân bằng áp suất (K<sub>p</sub>) thay vì K<sub>c</sub>. Ký hiệu mũi tên đi lên (&uarr;) có thể dùng để nhấn mạnh sản phẩm khí thoát ra."
+                data-example="Ví dụ: CO<sub>2</sub>(g), Cl<sub>2</sub>(g), O<sub>2</sub>(g)">
+                <div class="symbol-icon">(g)</div>
+                <div class="symbol-title">Chất khí</div>
+                <div class="symbol-subtitle">Gas</div>
+            </div>
+            
+            <div class="symbol-card" 
+                data-symbol="(aq)" 
+                data-name="Aqueous / Dung dịch nước" 
+                data-meaning="Thể hiện chất tan đã được hòa tan hoàn toàn trong dung môi nước." 
+                data-details="Ký hiệu này biểu thị việc chất tan có thể bị phân ly thành các ion tự do (đối với chất điện li) hoặc tồn tại dưới dạng phân tử ngậm nước (hydrat hóa) trong dung dịch."
+                data-example="Ví dụ: HCl(aq), Na<sup>+</sup>(aq), NaCl(aq)">
+                <div class="symbol-icon">(aq)</div>
+                <div class="symbol-title">Dung dịch nước</div>
+                <div class="symbol-subtitle">Aqueous</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="&Delta;<sub>r</sub>H<sup>0</sup><sub>298</sub>" 
+                data-name="Biến thiên Enthalpy chuẩn" 
+                data-meaning="Lượng nhiệt tỏa ra hoặc thu vào của một phản ứng hóa học ở điều kiện chuẩn (25°C - 298.15K, 1 bar)." 
+                data-details="Quy ước dấu: Giá trị Âm (-) biểu thị phản ứng Tỏa nhiệt. Giá trị Dương (+) biểu thị phản ứng Thu nhiệt. Phản ứng có &Delta;<sub>r</sub>H càng âm thì thường càng thuận lợi về mặt năng lượng."
+                data-example="Ví dụ: CH<sub>4</sub>(g) + 2O<sub>2</sub>(g) &rarr; CO<sub>2</sub>(g) + 2H<sub>2</sub>O(l) có &Delta;<sub>r</sub>H<sup>0</sup><sub>298</sub> = -890,3 kJ (Tỏa nhiệt)">
+                <div class="symbol-icon">&Delta;<sub>r</sub>H<sup>0</sup><sub>298</sub></div>
+                <div class="symbol-title">Biến thiên Enthalpy</div>
+                <div class="symbol-subtitle">Standard Reaction Enthalpy</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="&Delta;<sub>f</sub>H<sup>0</sup><sub>298</sub>" 
+                data-name="Enthalpy tạo thành chuẩn" 
+                data-meaning="Nhiệt lượng kèm theo phản ứng tạo thành 1 mol chất đó từ các đơn chất bền nhất ở điều kiện chuẩn." 
+                data-details="Theo quy ước quốc tế, các đơn chất ở trạng thái bền vững nhất tại điều kiện chuẩn (ví dụ: O<sub>2</sub>(g), C(graphite), H<sub>2</sub>(g)) sẽ có &Delta;<sub>f</sub>H<sup>0</sup><sub>298</sub> = 0 kJ/mol."
+                data-example="Ví dụ: &Delta;<sub>f</sub>H<sup>0</sup><sub>298</sub>(CO<sub>2</sub>, g) = -393,5 kJ/mol">
+                <div class="symbol-icon">&Delta;<sub>f</sub>H<sup>0</sup><sub>298</sub></div>
+                <div class="symbol-title">Enthalpy tạo thành</div>
+                <div class="symbol-subtitle">Standard Enthalpy of Formation</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="v" 
+                data-name="Tốc độ phản ứng" 
+                data-meaning="Đại lượng đặc trưng cho sự biến thiên nồng độ của chất phản ứng hoặc sản phẩm trong một đơn vị thời gian." 
+                data-details="Đơn vị phổ biến nhất là mol/(L.s) hoặc M/s. Tốc độ này chịu ảnh hưởng lớn bởi nhiệt độ (theo quy tắc Van't Hoff), nồng độ chất phản ứng, áp suất, chất xúc tác và diện tích bề mặt tiếp xúc."
+                data-example="Công thức định luật tác dụng khối lượng: v = k × [A]<sup>a</sup> × [B]<sup>b</sup>">
+                <div class="symbol-icon">v</div>
+                <div class="symbol-title">Tốc độ phản ứng</div>
+                <div class="symbol-subtitle">Reaction Rate</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="K<sub>C</sub>" 
+                data-name="Hằng số cân bằng (nồng độ)" 
+                data-meaning="Đại lượng đánh giá mức độ chuyển dịch của phản ứng thuận nghịch dựa trên nồng độ mol của các chất lúc đạt trạng thái cân bằng." 
+                data-details="Giá trị K<sub>C</sub> chỉ phụ thuộc vào bản chất phản ứng và nhiệt độ (không phụ thuộc vào nồng độ ban đầu). Lưu ý tuyệt đối không đưa nồng độ của chất rắn (s) và chất lỏng tinh khiết (l) vào biểu thức tính K<sub>C</sub>."
+                data-example="Cân bằng: aA + bB &#8652; cC + dD. Có K<sub>C</sub> = ([C]<sup>c</sup>.[D]<sup>d</sup>) / ([A]<sup>a</sup>.[B]<sup>b</sup>)">
+                <div class="symbol-icon">K<sub>C</sub></div>
+                <div class="symbol-title">Hằng số cân bằng</div>
+                <div class="symbol-subtitle">Equilibrium Constant</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="E<sup>0</sup><sub>pin</sub>" 
+                data-name="Sức điện động chuẩn" 
+                data-meaning="Đo lường khả năng sinh dòng điện của một pin điện hóa ở điều kiện tiêu chuẩn (nồng độ 1M, áp suất 1 bar, 25°C)." 
+                data-details="Một phản ứng oxi hóa - khử có thể tự xảy ra khi E<sup>0</sup><sub>pin</sub> > 0. Có mối liên hệ chặt chẽ với biến thiên năng lượng tự do Gibbs qua biểu thức: &Delta;G<sup>0</sup> = -nFE<sup>0</sup><sub>pin</sub>."
+                data-example="Công thức: E<sup>0</sup><sub>pin</sub> = E<sup>0</sup><sub>cathode</sub> - E<sup>0</sup><sub>anode</sub>">
+                <div class="symbol-icon">E<sup>0</sup><sub>pin</sub></div>
+                <div class="symbol-title">Sức điện động chuẩn</div>
+                <div class="symbol-subtitle">Standard Cell Potential</div>
+            </div>
+
+            <div class="symbol-card" 
+                data-symbol="E<sup>0</sup><sub>oxh/kh</sub>" 
+                data-name="Thế điện cực chuẩn" 
+                data-meaning="Đại lượng đặc trưng cho khả năng oxi hóa hoặc khử của một cặp oxi hóa/khử ở điều kiện tiêu chuẩn." 
+                data-details="Theo IUPAC, người ta quy ước chọn điện cực hydro chuẩn (SHE) làm mốc tham chiếu và gán giá trị E<sup>0</sup> = 0,00 V. Thế điện cực càng lớn (dương), tính oxi hóa của dạng oxi hóa càng mạnh và ngược lại."
+                data-example="Ví dụ: E<sup>0</sup><sub>Cu<sup>2+</sup>/Cu</sub> = +0,34 V, E<sup>0</sup><sub>Zn<sup>2+</sup>/Zn</sub> = -0,76 V">
+                <div class="symbol-icon">E<sup>0</sup><sub>oxh/kh</sub></div>
+                <div class="symbol-title">Thế điện cực chuẩn</div>
+                <div class="symbol-subtitle">Standard Electrode Potential</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="symbolModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon" id="modal-icon"></div>
+            <div class="modal-title" id="modal-title"></div>
+            
+            <div class="modal-body-section">
+                <h4><i class="fas fa-book"></i> Ý nghĩa cơ bản</h4>
+                <p id="modal-meaning"></p>
+            </div>
+
+            <div class="modal-body-section">
+                <h4><i class="fas fa-info-circle"></i> Chi tiết & Lưu ý</h4>
+                <p id="modal-details"></p>
+            </div>
+            
+            <div class="modal-body-section">
+                <h4><i class="fas fa-lightbulb"></i> Ví dụ minh họa</h4>
+                <p id="modal-example"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>WatchNReact</h3>
+                <p>Hệ sinh thái học hóa học tương tác, giúp học sinh Việt Nam khám phá niềm vui học hóa qua thực nghiệm và tư duy phản biện.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Liên Kết Nhanh</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Trang chủ</a></li>
+                    <li><a href="experiment.html">Thí nghiệm</a></li>
+                    <li><a href="exercise.html">Bài tập tương tác</a></li>
+                    <li><a href="symbols.html">Ký hiệu hóa học</a></li>
+                    <li><a href="periodic.html">Bảng tuần hoàn</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Tính Năng Nổi Bật</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Học qua video tương tác</a></li>
+                    <li><a href="#">Câu hỏi Socratic</a></li>
+                    <li><a href="#">Phản hồi tức thì</a></li>
+                    <li><a href="#">Theo dõi tiến độ</a></li>
+                    <li><a href="#">Cộng đồng học tập</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác. Tất cả các quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script>
+        const modal = document.getElementById('symbolModal');
+        const cards = document.querySelectorAll('.symbol-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                const symbol = card.getAttribute('data-symbol');
+                const name = card.getAttribute('data-name');
+                const meaning = card.getAttribute('data-meaning');
+                const details = card.getAttribute('data-details');
+                const example = card.getAttribute('data-example');
+
+                document.getElementById('modal-icon').innerHTML = symbol;
+                document.getElementById('modal-title').innerText = name;
+                document.getElementById('modal-meaning').innerHTML = meaning;
+                document.getElementById('modal-details').innerHTML = details;
+                document.getElementById('modal-example').innerHTML = example;
+
+                modal.classList.add('active');
+            });
+        });
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

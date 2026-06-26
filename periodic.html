@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Bảng Tuần Hoàn Hiện Đại</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TỪ INDEX --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --gradient-start: #2563eb; --gradient-end: #00d2ff;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; /* Cỡ chữ cơ bản cho bảng tuần hoàn */
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--accent), #a855f7);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+
+        .page-header p { color: #cbd5e1; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* Main Content */
+        main { max-width: 1300px; margin: 0 auto; padding: 2rem 1rem; flex: 1; width: 100%; box-sizing: border-box;}
+
+        /* Bảng tuần hoàn CSS Grid Layout */
+        .periodic-wrapper { overflow-x: auto; padding: 20px 0; }
+        .periodic-table { 
+            display: grid; 
+            grid-template-columns: repeat(18, minmax(60px, 1fr)); 
+            gap: 6px; 
+            min-width: 1100px;
+        }
+
+        .element { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            padding: 6px 4px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .element:hover { 
+            transform: scale(1.15); 
+            z-index: 10; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); 
+            border-color: var(--text);
+        }
+
+        .el-num { font-size: 0.75rem; color: var(--text-muted); text-align: left; font-weight: 600; padding-left: 2px;}
+        .el-sym { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 2px 0; }
+        .el-name { font-size: 0.65rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        
+        .placeholder { background: transparent; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted); pointer-events: none; }
+
+        /* Phân loại màu sắc theo chuẩn quốc tế */
+        .alkali { background: #fecaca; border-color: #f87171; } /* Đỏ nhạt */
+        .alkaline { background: #fed7aa; border-color: #fb923c; } /* Cam nhạt */
+        .transition { background: #fef08a; border-color: #facc15; } /* Vàng nhạt */
+        .post-transition { background: #bbf7d0; border-color: #4ade80; } /* Xanh lá nhạt */
+        .metalloid { background: #99f6e4; border-color: #2dd4bf; } /* Xanh ngọc */
+        .nonmetal { background: #bfdbfe; border-color: #60a5fa; } /* Xanh dương nhạt */
+        .halogen { background: #e9d5ff; border-color: #c084fc; } /* Tím nhạt */
+        .noble { background: #fbcfe8; border-color: #f472b6; } /* Hồng nhạt */
+        .lanthanide { background: #e2e8f0; border-color: #94a3b8; } /* Xám nhạt */
+        .actinide { background: #f1f5f9; border-color: #cbd5e1; } /* Xám rất nhạt */
+        .unknown { background: #f8fafc; border-color: #e2e8f0; } /* Khuyết/Chưa rõ */
+
+        /* Legend (Chú giải) */
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* Modal Thông Tin (Thay thế Info Box cũ) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-width: 400px;
+            border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            transform: translateY(20px); transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        .modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); }
+        .modal-header.alkali { background: #fef2f2; } .modal-header.alkaline { background: #fff7ed; }
+        .modal-header.transition { background: #fefce8; } .modal-header.post-transition { background: #f0fdf4; }
+        .modal-header.metalloid { background: #f0fdfa; } .modal-header.nonmetal { background: #eff6ff; }
+        .modal-header.halogen { background: #faf5ff; } .modal-header.noble { background: #fdf2f8; }
+        .modal-header.lanthanide { background: #f8fafc; } .modal-header.actinide { background: #f1f5f9; }
+
+        .el-large-sym { font-size: 3.5rem; font-weight: 800; line-height: 1; margin: 0; color: var(--text); }
+        .el-large-num { font-size: 1.2rem; color: var(--text-muted); font-weight: bold; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1; }
+        .close-btn:hover { color: var(--danger); }
+        
+        .modal-body { padding: 20px; }
+        .info-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--surface); padding: 10px 0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-muted); font-weight: 500; }
+        .info-value { font-weight: 600; color: var(--text); text-align: right;}
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem 1.5rem; margin-top: auto; font-size: 0.9rem; }
+        .copyright { text-align: center; max-width: 1200px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html"><i class="fas fa-home"></i> Trang chủ</a>
+            <a href="experiment.html"><i class="fas fa-flask"></i> Thí nghiệm</a>
+            <a href="exercise.html"><i class="fas fa-pen-to-square"></i> Bài tập</a>
+            <a href="symbols.html"><i class="fas fa-atom"></i> Ký hiệu</a>
+            <a href="periodic.html" class="active"><i class="fas fa-table-cells-large"></i> Bảng tuần hoàn</a>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Bảng Tuần Hoàn Các Nguyên Tố Hóa Học</h1>
+        <p>Phiên bản tương tác tiêu chuẩn IUPAC mới nhất, tích hợp đầy đủ 118 nguyên tố.</p>
+    </header>
+
+    <main>
+        <div class="legend-container">
+            <div class="legend-item"><div class="legend-color alkali"></div> Kim loại kiềm</div>
+            <div class="legend-item"><div class="legend-color alkaline"></div> Kim loại kiềm thổ</div>
+            <div class="legend-item"><div class="legend-color transition"></div> Kim loại chuyển tiếp</div>
+            <div class="legend-item"><div class="legend-color post-transition"></div> Kim loại yếu</div>
+            <div class="legend-item"><div class="legend-color metalloid"></div> Á kim</div>
+            <div class="legend-item"><div class="legend-color nonmetal"></div> Phi kim</div>
+            <div class="legend-item"><div class="legend-color halogen"></div> Halogen</div>
+            <div class="legend-item"><div class="legend-color noble"></div> Khí hiếm</div>
+            <div class="legend-item"><div class="legend-color lanthanide"></div> Họ Lantan</div>
+            <div class="legend-item"><div class="legend-color actinide"></div> Họ Actini</div>
+        </div>
+
+        <div class="periodic-wrapper">
+            <div class="periodic-table" id="pTable">
+                <div class="placeholder" style="grid-column: 3; grid-row: 6;">57-71<br>La-Lu</div>
+                <div class="placeholder" style="grid-column: 3; grid-row: 7;">89-103<br>Ac-Lr</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="el-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-header">
+                <div>
+                    <div class="el-large-num" id="modal-num">1</div>
+                    <div class="el-large-sym" id="modal-sym">H</div>
+                </div>
+                <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <span class="info-label">Tên Nguyên Tố</span>
+                    <span class="info-value" id="modal-name">Hydrogen</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phân Loại</span>
+                    <span class="info-value" id="modal-type">Phi kim</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Khối lượng nguyên tử</span>
+                    <span class="info-value" id="modal-mass">1.008 u</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Chu kỳ (Period)</span>
+                    <span class="info-value" id="modal-period">1</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Nhóm (Group)</span>
+                    <span class="info-value" id="modal-group">1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="copyright">
+            <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác. Tất cả các quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Data full 118 nguyên tố
+        const elementsData = [
+            { z: 1, sym: 'H', name: 'Hydrogen', mass: '1.008', col: 1, row: 1, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 2, sym: 'He', name: 'Helium', mass: '4.0026', col: 18, row: 1, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 3, sym: 'Li', name: 'Lithium', mass: '6.94', col: 1, row: 2, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 4, sym: 'Be', name: 'Beryllium', mass: '9.0122', col: 2, row: 2, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            { z: 5, sym: 'B', name: 'Boron', mass: '10.81', col: 13, row: 2, type: 'metalloid', typeName: 'Á kim' },
+            { z: 6, sym: 'C', name: 'Carbon', mass: '12.011', col: 14, row: 2, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 7, sym: 'N', name: 'Nitrogen', mass: '14.007', col: 15, row: 2, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 8, sym: 'O', name: 'Oxygen', mass: '15.999', col: 16, row: 2, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 9, sym: 'F', name: 'Fluorine', mass: '18.998', col: 17, row: 2, type: 'halogen', typeName: 'Halogen' },
+            { z: 10, sym: 'Ne', name: 'Neon', mass: '20.180', col: 18, row: 2, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 11, sym: 'Na', name: 'Sodium', mass: '22.990', col: 1, row: 3, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 12, sym: 'Mg', name: 'Magnesium', mass: '24.305', col: 2, row: 3, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            { z: 13, sym: 'Al', name: 'Aluminium', mass: '26.982', col: 13, row: 3, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 14, sym: 'Si', name: 'Silicon', mass: '28.085', col: 14, row: 3, type: 'metalloid', typeName: 'Á kim' },
+            { z: 15, sym: 'P', name: 'Phosphorus', mass: '30.974', col: 15, row: 3, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 16, sym: 'S', name: 'Sulfur', mass: '32.06', col: 16, row: 3, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 17, sym: 'Cl', name: 'Chlorine', mass: '35.45', col: 17, row: 3, type: 'halogen', typeName: 'Halogen' },
+            { z: 18, sym: 'Ar', name: 'Argon', mass: '39.95', col: 18, row: 3, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 19, sym: 'K', name: 'Potassium', mass: '39.098', col: 1, row: 4, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 20, sym: 'Ca', name: 'Calcium', mass: '40.078', col: 2, row: 4, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            { z: 21, sym: 'Sc', name: 'Scandium', mass: '44.956', col: 3, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 22, sym: 'Ti', name: 'Titanium', mass: '47.867', col: 4, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 23, sym: 'V', name: 'Vanadium', mass: '50.942', col: 5, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 24, sym: 'Cr', name: 'Chromium', mass: '51.996', col: 6, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 25, sym: 'Mn', name: 'Manganese', mass: '54.938', col: 7, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 26, sym: 'Fe', name: 'Iron', mass: '55.845', col: 8, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 27, sym: 'Co', name: 'Cobalt', mass: '58.933', col: 9, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 28, sym: 'Ni', name: 'Nickel', mass: '58.693', col: 10, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 29, sym: 'Cu', name: 'Copper', mass: '63.546', col: 11, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 30, sym: 'Zn', name: 'Zinc', mass: '65.38', col: 12, row: 4, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 31, sym: 'Ga', name: 'Gallium', mass: '69.723', col: 13, row: 4, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 32, sym: 'Ge', name: 'Germanium', mass: '72.630', col: 14, row: 4, type: 'metalloid', typeName: 'Á kim' },
+            { z: 33, sym: 'As', name: 'Arsenic', mass: '74.922', col: 15, row: 4, type: 'metalloid', typeName: 'Á kim' },
+            { z: 34, sym: 'Se', name: 'Selenium', mass: '78.971', col: 16, row: 4, type: 'nonmetal', typeName: 'Phi kim' },
+            { z: 35, sym: 'Br', name: 'Bromine', mass: '79.904', col: 17, row: 4, type: 'halogen', typeName: 'Halogen' },
+            { z: 36, sym: 'Kr', name: 'Krypton', mass: '83.798', col: 18, row: 4, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 37, sym: 'Rb', name: 'Rubidium', mass: '85.468', col: 1, row: 5, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 38, sym: 'Sr', name: 'Strontium', mass: '87.62', col: 2, row: 5, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            { z: 39, sym: 'Y', name: 'Yttrium', mass: '88.906', col: 3, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 40, sym: 'Zr', name: 'Zirconium', mass: '91.224', col: 4, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 41, sym: 'Nb', name: 'Niobium', mass: '92.906', col: 5, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 42, sym: 'Mo', name: 'Molybdenum', mass: '95.95', col: 6, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 43, sym: 'Tc', name: 'Technetium', mass: '(98)', col: 7, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 44, sym: 'Ru', name: 'Ruthenium', mass: '101.07', col: 8, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 45, sym: 'Rh', name: 'Rhodium', mass: '102.91', col: 9, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 46, sym: 'Pd', name: 'Palladium', mass: '106.42', col: 10, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 47, sym: 'Ag', name: 'Silver', mass: '107.87', col: 11, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 48, sym: 'Cd', name: 'Cadmium', mass: '112.41', col: 12, row: 5, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 49, sym: 'In', name: 'Indium', mass: '114.82', col: 13, row: 5, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 50, sym: 'Sn', name: 'Tin', mass: '118.71', col: 14, row: 5, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 51, sym: 'Sb', name: 'Antimony', mass: '121.76', col: 15, row: 5, type: 'metalloid', typeName: 'Á kim' },
+            { z: 52, sym: 'Te', name: 'Tellurium', mass: '127.60', col: 16, row: 5, type: 'metalloid', typeName: 'Á kim' },
+            { z: 53, sym: 'I', name: 'Iodine', mass: '126.90', col: 17, row: 5, type: 'halogen', typeName: 'Halogen' },
+            { z: 54, sym: 'Xe', name: 'Xenon', mass: '131.29', col: 18, row: 5, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 55, sym: 'Cs', name: 'Caesium', mass: '132.91', col: 1, row: 6, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 56, sym: 'Ba', name: 'Barium', mass: '137.33', col: 2, row: 6, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            // Lanthanides (57-71)
+            { z: 57, sym: 'La', name: 'Lanthanum', mass: '138.91', col: 3, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 58, sym: 'Ce', name: 'Cerium', mass: '140.12', col: 4, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 59, sym: 'Pr', name: 'Praseodymium', mass: '140.91', col: 5, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 60, sym: 'Nd', name: 'Neodymium', mass: '144.24', col: 6, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 61, sym: 'Pm', name: 'Promethium', mass: '(145)', col: 7, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 62, sym: 'Sm', name: 'Samarium', mass: '150.36', col: 8, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 63, sym: 'Eu', name: 'Europium', mass: '151.96', col: 9, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 64, sym: 'Gd', name: 'Gadolinium', mass: '157.25', col: 10, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 65, sym: 'Tb', name: 'Terbium', mass: '158.93', col: 11, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 66, sym: 'Dy', name: 'Dysprosium', mass: '162.50', col: 12, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 67, sym: 'Ho', name: 'Holmium', mass: '164.93', col: 13, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 68, sym: 'Er', name: 'Erbium', mass: '167.26', col: 14, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 69, sym: 'Tm', name: 'Thulium', mass: '168.93', col: 15, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 70, sym: 'Yb', name: 'Ytterbium', mass: '173.05', col: 16, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            { z: 71, sym: 'Lu', name: 'Lutetium', mass: '174.97', col: 17, row: 9, type: 'lanthanide', typeName: 'Họ Lantan' },
+            // Tiếp tục chu kỳ 6
+            { z: 72, sym: 'Hf', name: 'Hafnium', mass: '178.49', col: 4, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 73, sym: 'Ta', name: 'Tantalum', mass: '180.95', col: 5, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 74, sym: 'W', name: 'Tungsten', mass: '183.84', col: 6, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 75, sym: 'Re', name: 'Rhenium', mass: '186.21', col: 7, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 76, sym: 'Os', name: 'Osmium', mass: '190.23', col: 8, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 77, sym: 'Ir', name: 'Iridium', mass: '192.22', col: 9, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 78, sym: 'Pt', name: 'Platinum', mass: '195.08', col: 10, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 79, sym: 'Au', name: 'Gold', mass: '196.97', col: 11, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 80, sym: 'Hg', name: 'Mercury', mass: '200.59', col: 12, row: 6, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 81, sym: 'Tl', name: 'Thallium', mass: '204.38', col: 13, row: 6, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 82, sym: 'Pb', name: 'Lead', mass: '207.2', col: 14, row: 6, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 83, sym: 'Bi', name: 'Bismuth', mass: '208.98', col: 15, row: 6, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 84, sym: 'Po', name: 'Polonium', mass: '(209)', col: 16, row: 6, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 85, sym: 'At', name: 'Astatine', mass: '(210)', col: 17, row: 6, type: 'metalloid', typeName: 'Á kim' },
+            { z: 86, sym: 'Rn', name: 'Radon', mass: '(222)', col: 18, row: 6, type: 'noble', typeName: 'Khí hiếm' },
+            { z: 87, sym: 'Fr', name: 'Francium', mass: '(223)', col: 1, row: 7, type: 'alkali', typeName: 'Kim loại kiềm' },
+            { z: 88, sym: 'Ra', name: 'Radium', mass: '(226)', col: 2, row: 7, type: 'alkaline', typeName: 'Kim loại kiềm thổ' },
+            // Actinides (89-103)
+            { z: 89, sym: 'Ac', name: 'Actinium', mass: '(227)', col: 3, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 90, sym: 'Th', name: 'Thorium', mass: '232.04', col: 4, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 91, sym: 'Pa', name: 'Protactinium', mass: '231.04', col: 5, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 92, sym: 'U', name: 'Uranium', mass: '238.03', col: 6, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 93, sym: 'Np', name: 'Neptunium', mass: '(237)', col: 7, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 94, sym: 'Pu', name: 'Plutonium', mass: '(244)', col: 8, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 95, sym: 'Am', name: 'Americium', mass: '(243)', col: 9, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 96, sym: 'Cm', name: 'Curium', mass: '(247)', col: 10, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 97, sym: 'Bk', name: 'Berkelium', mass: '(247)', col: 11, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 98, sym: 'Cf', name: 'Californium', mass: '(251)', col: 12, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 99, sym: 'Es', name: 'Einsteinium', mass: '(252)', col: 13, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 100, sym: 'Fm', name: 'Fermium', mass: '(257)', col: 14, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 101, sym: 'Md', name: 'Mendelevium', mass: '(258)', col: 15, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 102, sym: 'No', name: 'Nobelium', mass: '(259)', col: 16, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            { z: 103, sym: 'Lr', name: 'Lawrencium', mass: '(266)', col: 17, row: 10, type: 'actinide', typeName: 'Họ Actini' },
+            // Tiếp tục chu kỳ 7
+            { z: 104, sym: 'Rf', name: 'Rutherfordium', mass: '(267)', col: 4, row: 7, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 105, sym: 'Db', name: 'Dubnium', mass: '(268)', col: 5, row: 7, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 106, sym: 'Sg', name: 'Seaborgium', mass: '(269)', col: 6, row: 7, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 107, sym: 'Bh', name: 'Bohrium', mass: '(270)', col: 7, row: 7, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 108, sym: 'Hs', name: 'Hassium', mass: '(269)', col: 8, row: 7, type: 'transition', typeName: 'Kim loại chuyển tiếp' },
+            { z: 109, sym: 'Mt', name: 'Meitnerium', mass: '(278)', col: 9, row: 7, type: 'unknown', typeName: 'Chưa rõ' },
+            { z: 110, sym: 'Ds', name: 'Darmstadtium', mass: '(281)', col: 10, row: 7, type: 'unknown', typeName: 'Chưa rõ' },
+            { z: 111, sym: 'Rg', name: 'Roentgenium', mass: '(282)', col: 11, row: 7, type: 'unknown', typeName: 'Chưa rõ' },
+            { z: 112, sym: 'Cn', name: 'Copernicium', mass: '(285)', col: 12, row: 7, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 113, sym: 'Nh', name: 'Nihonium', mass: '(286)', col: 13, row: 7, type: 'unknown', typeName: 'Chưa rõ' },
+            { z: 114, sym: 'Fl', name: 'Flerovium', mass: '(289)', col: 14, row: 7, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 115, sym: 'Mc', name: 'Moscovium', mass: '(290)', col: 15, row: 7, type: 'unknown', typeName: 'Chưa rõ' },
+            { z: 116, sym: 'Lv', name: 'Livermorium', mass: '(293)', col: 16, row: 7, type: 'post-transition', typeName: 'Kim loại yếu' },
+            { z: 117, sym: 'Ts', name: 'Tennessine', mass: '(294)', col: 17, row: 7, type: 'halogen', typeName: 'Halogen' },
+            { z: 118, sym: 'Og', name: 'Oganesson', mass: '(294)', col: 18, row: 7, type: 'noble', typeName: 'Khí hiếm' }
+        ];
+
+        const container = document.getElementById('pTable');
+        const modal = document.getElementById('el-modal');
+        const mHeader = document.getElementById('modal-header');
+
+        // Render bảng tuần hoàn
+        elementsData.forEach(el => {
+            const div = document.createElement('div');
+            div.className = `element ${el.type}`;
+            div.style.gridColumn = el.col;
+            div.style.gridRow = el.row;
+            div.innerHTML = `<div class="el-num">${el.z}</div><div class="el-sym">${el.sym}</div><div class="el-name">${el.name}</div>`;
+            
+            div.onclick = () => showModal(el);
+            container.appendChild(div);
+        });
+
+        // Xử lý Modal
+        function showModal(el) {
+            document.getElementById('modal-num').innerText = el.z;
+            document.getElementById('modal-sym').innerText = el.sym;
+            document.getElementById('modal-name').innerText = el.name;
+            document.getElementById('modal-type').innerText = el.typeName;
+            document.getElementById('modal-mass').innerText = el.mass + ' u';
+            
+            // Xử lý hiển thị nhóm đối với Lanthanide/Actinide
+            let groupStr = (el.row === 9 || el.row === 10) ? 'Không áp dụng' : el.col;
+            let periodStr = el.row === 9 ? 6 : (el.row === 10 ? 7 : el.row);
+            
+            document.getElementById('modal-group').innerText = groupStr;
+            document.getElementById('modal-period').innerText = periodStr;
+
+            // Xóa class màu cũ và thêm màu mới cho Header Modal
+            mHeader.className = 'modal-header ' + el.type;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // Đóng modal khi click ra ngoài
+        modal.addEventListener('click', function(e) {
+            if(e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>

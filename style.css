@@ -1,0 +1,234 @@
+/* CSS Hệ thống & Màu sắc Gamified */
+:root {
+    --primary: #00d2ff;
+    --secondary: #3a7bd5;
+    --bg: #121220;
+    --surface: #1e1e2f;
+    --text: #ffffff;
+    --text-muted: #a0a0c0;
+    --success: #00e676;
+}
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+
+body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    line-height: 1.6; 
+}
+
+/* Thanh Điều Hướng (Navbar) */
+nav {
+    background-color: var(--surface);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.logo svg { 
+    width: 30px; 
+    height: 30px; 
+    margin-right: 10px; 
+    fill: var(--primary); 
+}
+
+.nav-links { 
+    display: flex; 
+    gap: 1.5rem; 
+}
+
+.nav-links a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 1rem; 
+    transition: color 0.3s;
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+}
+
+.nav-links a:hover, .nav-links a.active { 
+    color: var(--primary); 
+    background-color: rgba(0, 210, 255, 0.1);
+}
+
+/* Nội dung chính */
+main { 
+    padding: 2rem; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+h1, h2 { 
+    color: var(--primary); 
+    margin-bottom: 1.5rem; 
+}
+
+.card { 
+    background-color: var(--surface); 
+    padding: 1.5rem; 
+    border-radius: 12px; 
+    margin-bottom: 1.5rem; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+}
+
+ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+li {
+    margin-bottom: 0.5rem;
+}
+
+/* Nút bấm */
+.btn {
+    display: inline-block;
+    background: linear-gradient(45deg, var(--secondary), var(--primary));
+    color: white; 
+    border: none; 
+    padding: 0.8rem 1.5rem; 
+    border-radius: 8px;
+    cursor: pointer; 
+    font-weight: bold; 
+    text-decoration: none;
+    text-align: center;
+    transition: transform 0.2s;
+}
+.btn:hover { 
+    transform: scale(1.05); 
+}
+
+/* Cấu trúc Video Socratic */
+.video-container { 
+    position: relative; 
+    width: 100%; 
+    max-width: 800px; 
+    margin: 0 auto; 
+}
+
+video { 
+    width: 100%; 
+    border-radius: 12px; 
+    border: 2px solid var(--surface); 
+}
+
+.question-overlay {
+    display: none; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(18, 18, 32, 0.95); 
+    border-radius: 12px;
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    text-align: center;
+}
+
+.question-overlay input {
+    padding: 0.8rem; 
+    width: 80%; 
+    margin: 1rem 0; 
+    border-radius: 6px;
+    border: 1px solid var(--primary); 
+    background: var(--bg); 
+    color: white;
+    font-size: 1rem;
+}
+
+/* Bảng ký hiệu */
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 1rem; 
+}
+
+th, td { 
+    padding: 1rem; 
+    text-align: left; 
+    border-bottom: 1px solid #333; 
+}
+
+th { 
+    background-color: var(--surface); 
+    color: var(--primary); 
+}
+
+/* Bảng tuần hoàn */
+.periodic-table {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    gap: 5px;
+    margin-top: 2rem;
+    overflow-x: auto;
+}
+
+.element {
+    background-color: var(--surface); 
+    border: 1px solid #444; 
+    border-radius: 4px;
+    padding: 5px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: transform 0.2s, border-color 0.2s;
+    min-height: 60px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center;
+}
+
+.element:hover { 
+    transform: scale(1.2); 
+    border-color: var(--primary); 
+    z-index: 10; 
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}
+
+.el-num { 
+    font-size: 0.6rem; 
+    color: var(--text-muted); 
+    text-align: left; 
+}
+
+.el-sym { 
+    font-size: 1.2rem; 
+    font-weight: bold; 
+}
+
+/* Toạ độ Grid cho các nguyên tố mẫu */
+.el-1 { grid-column: 1; grid-row: 1; }
+.el-2 { grid-column: 18; grid-row: 1; }
+.el-3 { grid-column: 1; grid-row: 2; }
+.el-4 { grid-column: 2; grid-row: 2; }
+.el-5 { grid-column: 13; grid-row: 2; }
+.el-6 { grid-column: 14; grid-row: 2; }
+.el-7 { grid-column: 15; grid-row: 2; }
+.el-8 { grid-column: 16; grid-row: 2; }

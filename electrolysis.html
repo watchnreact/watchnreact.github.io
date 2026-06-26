@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Điện Phân Dung Dịch NaCl</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Main Container Layout */
+        .layout-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .layout-container { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Video & Header */
+        .video-section { position: sticky; top: 90px; height: fit-content; }
+        .page-title { color: var(--text); font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .page-title span { color: var(--primary); }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        video { width: 100%; display: block; }
+
+        .video-overlay-msg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10;
+        }
+        .video-overlay-msg.active { opacity: 1; pointer-events: auto; }
+        .video-overlay-msg h3 { margin: 0 0 1rem 0; color: var(--accent); font-size: 1.5rem; }
+
+        /* Right Column: Interactive Questions */
+        .questions-section { padding-bottom: 2rem; }
+        
+        .section-tag {
+            display: inline-block; background: var(--surface); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
+            margin: 2rem 0 1rem 0; border: 1px solid var(--border);
+        }
+        .section-tag:first-child { margin-top: 0; }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .card.active-question {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.15);
+            transform: translateX(-5px);
+        }
+
+        .card.active-question::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px; background: var(--accent);
+        }
+
+        .question-text { font-weight: 600; font-size: 1.1rem; margin-bottom: 1.2rem; display: block; color: var(--text); }
+        
+        /* Multiple Choice Options */
+        .options { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;}
+        .option { 
+            padding: 12px 16px; border: 2px solid var(--border); border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1rem; background: var(--card-bg); 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .option:hover { border-color: #cbd5e1; background: var(--surface); }
+        .option.selected { border-color: var(--primary); background: #eff6ff; font-weight: 500; }
+        .option.selected::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary); }
+
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; 
+            font-size: 1rem; outline: none; transition: 0.2s; margin-bottom: 1.5rem; box-sizing: border-box;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        /* True/False Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: var(--surface); font-weight: 600; color: var(--text); }
+        td:nth-child(2) { white-space: nowrap; text-align: center;}
+
+        /* Buttons & Feedback */
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; 
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-hint { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-hint:hover { background: #e2e8f0; color: var(--warning); transform: translateY(-2px); }
+
+        .socratic-hint {
+            display: none; background: #fffbeb; border-left: 4px solid var(--warning);
+            padding: 1rem; margin-top: 1rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #92400e; margin-bottom: 1.5rem;
+        }
+
+        .feedback { 
+            display: none; margin-top: 1.5rem; padding: 1.2rem; 
+            border-radius: 8px; font-size: 0.95rem; line-height: 1.6; 
+        }
+        .feedback.correct { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .feedback.wrong { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem; text-align: center; font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="experiment.html"><i class="fas fa-arrow-left"></i> Trở về danh sách</a>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="video-section">
+            <h1 class="page-title">Video 5: <span>Điện Phân Dung Dịch NaCl</span></h1>
+            <p class="page-subtitle"><b>Nội dung cốt lõi:</b> Hóa vô cơ - Điện phân</p>
+            <p class="page-subtitle"><b>Nguồn:</b> Kênh YouTube Mr. Skeleton Thí Nghiệm</p>
+            
+            <div class="video-wrapper">
+                <video id="mainVideo" controls controlsList="nodownload">
+                    <source src="Thí nghiệm 5 - Điện phân.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://youtu.be/1hW1hJghqq0" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                        <i class="fab fa-youtube"></i> Xem Video Gốc (YouTube)
+                    </a>
+                </div>
+                <div class="video-overlay-msg" id="videoOverlay">
+                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
+                <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
+                Video sẽ tự động dừng lại ở những khoảnh khắc quan trọng. Khi đó, một câu hỏi kiểm tra tư duy sẽ xuất hiện bên phải. Hãy cố gắng phân tích và tự trả lời trước khi xem tiếp.
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <div class="section-tag">I. Nhận diện phản ứng & Hiện tượng</div>
+            
+            <div class="card" id="q-mcq1" data-time="15">
+                <span class="question-text">Câu 1: Khi điện phân dung dịch NaCl có màng ngăn, các chất được tạo ra ở anode (cực dương) và cathode (cực âm) lần lượt là:</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Cl<sub>2</sub> và NaOH, H<sub>2</sub>.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Na và Cl<sub>2</sub>.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Cl<sub>2</sub> và Na.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. NaOH và H<sub>2</sub>.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy nhớ quy tắc "Anode (+) hút ion (-), Cathode (-) hút ion (+)". Tại Anode, ion Cl⁻ dễ bị oxi hóa thành khí Cl<sub>2</sub>. Tại Cathode, giữa ion Na⁺ và H<sub>2</sub>O, chất nào dễ bị khử hơn để giải phóng khí H<sub>2</sub> và để lại ion OH⁻?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq1', 'A', 'Tại anode (+) xảy ra sự oxi hóa ion Cl⁻ tạo khí Cl<sub>2</sub>. Tại cathode (-) xảy ra sự khử H<sub>2</sub>O tạo ra khí H<sub>2</sub> và ion OH⁻. Ion Na⁺ không bị điện phân mà kết hợp với OH⁻ tạo thành dung dịch NaOH.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq2" data-time="50">
+                <span class="question-text">Câu 2: Xét quá trình điện phân dung dịch NaCl bão hoà <b>KHÔNG</b> có màng ngăn. Phát biểu nào sau đây đúng?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Quá trình xảy ra tại cathode là Na⁺ + 1e &#8594; Na.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Quá trình xảy ra tại anode là 2H<sub>2</sub>O + 2e &#8594; H<sub>2</sub> + 2OH⁻.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Dung dịch thu được sau phản ứng là dung dịch NaOH.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Cho mẩu giấy màu vào dung dịch sau phản ứng thấy mẩu giấy mất màu.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq2"><strong>💡 Câu hỏi gợi mở:</strong> Nếu không có màng ngăn xốp, ngay khi sinh ra, khí Cl<sub>2</sub> ở anode sẽ tự do khuếch tán và tác dụng lập tức với dung dịch NaOH vừa sinh ra ở cathode. Sản phẩm của phản ứng này (NaCl + NaClO) được gọi là nước Javel. Nó có tính chất đặc trưng gì dùng trong tẩy rửa?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq2', 'D', 'Khi không có màng ngăn, Cl<sub>2</sub> sinh ra tác dụng với NaOH tạo thành dung dịch nước Javel (chứa NaClO). NaClO có tính oxi hóa rất mạnh, làm mất màu các chất màu hữu cơ (tẩy trắng).')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq3" data-time="90">
+                <span class="question-text">Câu 3: Điện phân dung dịch NaCl có màng ngăn với cường độ dòng điện 10A trong 2 giờ. Tính khối lượng dung dịch giảm sau khi điện phân, giả thiết chỉ có phản ứng điện phân dung dịch NaCl, bỏ qua lượng nước bay hơi. (Cho biết Q = n.F = I.t, F = 96500).</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. 13,6g.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. 20,4g.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. 27,2g.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. 34,0g.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq3"><strong>💡 Câu hỏi gợi mở:</strong><br>1. Đổi t = 2 giờ = 7200 giây. Tính số mol electron trao đổi: n<sub>e</sub> = I.t / 96500 = 10 * 7200 / 96500.<br>2. Ở cực (+): 2Cl⁻ &#8594; Cl<sub>2</sub>&#8593; + 2e. Ở cực (-): 2H<sub>2</sub>O + 2e &#8594; H<sub>2</sub>&#8593; + 2OH⁻.<br>3. Khối lượng dung dịch giảm chính là tổng khối lượng của 2 khí thoát ra (Cl<sub>2</sub> và H<sub>2</sub>).</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq3', 'C', 'n<sub>e</sub> = (10 × 7200) / 96500 = 0,746 mol. Phản ứng: 2NaCl + 2H<sub>2</sub>O &#8594; 2NaOH + H<sub>2</sub> + Cl<sub>2</sub>. Số mol Cl<sub>2</sub> = n<sub>e</sub>/2 = 0,373 mol. Số mol H<sub>2</sub> = n<sub>e</sub>/2 = 0,373 mol. Độ giảm khối lượng = m(Cl<sub>2</sub>) + m(H<sub>2</sub>) = 0,373 × 71 + 0,373 × 2 = 27,2 gam.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">II. Phân tích thiết bị & Bài tập thực tiễn</div>
+
+            <div class="card" id="q-sa1" data-time="130">
+                <span class="question-text">Câu 4: Trong công nghiệp chlorine-kiềm, đánh giá mô hình thiết bị điện phân:</span>
+                <ul style="font-size: 0.95rem; color: var(--text); margin-bottom: 1rem;">
+                    <li>(1) Khí X thoát ra ở Anode là hydrogen và khí Y ở Cathode là chlorine.</li>
+                    <li>(2) Để thu được dung dịch NaOH tinh khiết hơn (nồng độ 50%) có thể tăng nồng độ dung dịch NaCl ban đầu.</li>
+                    <li>(3) Ở cathode, nước bị khử thay cho Na⁺ do thế điện cực chuẩn của cặp 2H⁺/H<sub>2</sub> NHỎ HƠN Na⁺/Na.</li>
+                    <li>(4) Dung dịch NaCl được đưa vào từ anode và được duy trì ở mức cao hơn bên cathode giúp chất lỏng chảy từ trái sang phải, ngăn không cho dung dịch NaOH khuếch tán ngược sang anode.</li>
+                </ul>
+                <p style="margin-top:0; font-weight: bold;">Chỉ ra SỐ THỨ TỰ của phát biểu ĐÚNG?</p>
+                <input type="text" id="input-sa1" placeholder="Nhập một số nguyên (VD: 1, 2, 3...)">
+                <div class="socratic-hint" id="hint-sa1"><strong>💡 Câu hỏi gợi mở:</strong><br>- (1) Anode (+) hút ion Cl⁻ tạo khí gì?<br>- (2) Công nghệ màng xốp chỉ ra được NaOH 10-12%, muốn đạt 50% phải qua giai đoạn cô đặc chứ không thể chỉ nhờ tăng nồng độ đầu vào.<br>- (3) Nước bị khử vì nó DỄ khử hơn Na⁺ (tức là thế điện cực của H⁺/H<sub>2</sub> phải LỚN HƠN Na⁺/Na).<br>- (4) Cột áp suất thủy tĩnh cao hơn đẩy nước chảy về một phía, có tác dụng cản ngược lại không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa1', 'input-sa1', '4', 'Chỉ có phát biểu (4) ĐÚNG. (1) sai vì Anode ra Cl2, Cathode ra H2. (2) sai vì màng xốp luôn để lẫn NaCl, chỉ đạt 10-12%, phải đem đi cô đặc. (3) sai vì thế điện cực của H+/H2 LỚN HƠN Na+/Na nên mới dễ bị khử hơn.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa2" data-time="170">
+                <span class="question-text">Câu 5: Trong công nghiệp, sản xuất nước Javel được thực hiện bằng cách điện phân không màng ngăn. Một loại nước Javel thương phẩm (có khối lượng riêng 1,15 g/cm³) được bán với chai dung tích 1,0 L có nồng độ NaClO 10%; NaCl 8% và NaOH 0,8%. Để sản xuất 1000 chai nước Javel ở trên cần bao nhiêu kg dung dịch NaCl nồng độ 18,5%? (Làm tròn kết quả đến hàng đơn vị).</span>
+                <input type="text" id="input-sa2" placeholder="Nhập đáp số (VD: 1000, 1058...)">
+                <div class="socratic-hint" id="hint-sa2"><strong>💡 Câu hỏi gợi mở:</strong> Đây là bài toán bảo toàn nguyên tố Sodium (Na).<br>1. Tính khối lượng 1000 chai Javel: 1000 × 1000 mL × 1,15 g/mL = 1.150.000 g = 1150 kg.<br>2. Tính khối lượng NaClO, NaCl dư và NaOH trong 1150 kg đó (dùng C%).<br>3. Bảo toàn Na: Số mol Na ban đầu (trong NaCl nguyên liệu) = Số mol Na trong (NaClO + NaCl dư + NaOH). Tính m(NaCl) nguyên chất rồi chia cho nồng độ 18,5%.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa2', 'input-sa2', '1058', 'm(Javel) = 1150 kg. Khối lượng các chất: m(NaClO) = 115 kg &#8594; n = 115/74.5 kmol; m(NaCl) = 92 kg &#8594; n = 92/58.5 kmol; m(NaOH) = 9.2 kg &#8594; n = 9.2/40 kmol. Bảo toàn Na: n(NaCl đầu) = 115/74.5 + 92/58.5 + 9.2/40 = 3.346 kmol. m(NaCl nguyên chất) = 3.346 × 58.5 = 195.74 kg. Khối lượng dung dịch 18,5% cần dùng = 195.74 / 0.185 = 1058 kg.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa3" data-time="200">
+                <span class="question-text">Câu 6: Một nhà máy sử dụng màng trao đổi ion. Tại anode: dung dịch muối nạp vào có nồng độ NaCl 310 g/L với lưu lượng 1 m³/h; dung dịch muối rút ra còn 200 g/L với lưu lượng 0,8 m³/h. Tại cathode: nước nạp vào lưu lượng 0,2 m³/h và dung dịch NaOH rút ra với lưu lượng 0,3 m³/h.<br>Hỏi nồng độ (theo g/L) của dung dịch NaOH rút ra ở cathode là bao nhiêu? (Làm tròn đến hàng đơn vị).</span>
+                <input type="text" id="input-sa3" placeholder="Nhập đáp số (VD: 300, 342...)">
+                <div class="socratic-hint" id="hint-sa3"><strong>💡 Câu hỏi gợi mở:</strong> Xét trong thời gian 1 giờ (1h):<br>1. Tính khối lượng NaCl nạp vào: 310 g/L × 1000 L.<br>2. Tính khối lượng NaCl rút ra: 200 g/L × 800 L.<br>3. Lấy (1) trừ (2) để ra khối lượng NaCl đã tham gia điện phân. Đổi ra số mol.<br>4. Theo PT (NaCl &#8594; NaOH tỉ lệ 1:1), số mol NaOH sinh ra bằng số mol NaCl điện phân. Nhân với 40 để ra khối lượng NaOH.<br>5. Chia khối lượng NaOH đó cho thể tích rút ra (0,3 m³ = 300 L).</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa3', 'input-sa3', '342', 'Khối lượng NaCl tiêu hao trong 1 giờ = m(vào) - m(ra) = (310 × 1000) - (200 × 800) = 310.000 - 160.000 = 150.000 gam. Số mol NaCl phản ứng = 150.000 / 58.5 = 2564,1 mol. Số mol NaOH tạo thành = 2564,1 mol &#8594; Khối lượng NaOH = 2564,1 × 40 = 102.564 gam. Nồng độ g/L = 102.564 / 300 L = 341.88 ≈ 342 g/L.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">III. Biện luận Quy trình Thực nghiệm</div>
+
+            <div class="card" id="q-tf1" data-time="230">
+                <span class="question-text">Câu 7 (Biện luận Đ/S): Một nhà máy sản xuất sodium hydroxide (NaOH) và chlorine (Cl<sub>2</sub>) bằng phương pháp điện phân dung dịch sodium chloride (NaCl) có màng ngăn với điện cực trơ.<br>Phương trình hóa học: 2NaCl + 2H<sub>2</sub>O &#8594; 2NaOH + Cl<sub>2</sub> + H<sub>2</sub>.<br>Sodium hydroxide rắn thu được bằng cách cô đặc rồi hạ nhiệt độ dung dịch chứa NaOH sau điện phân.</span>
+                <table>
+                    <tr><th>Phát biểu biện luận</th><th>Chọn</th></tr>
+                    <tr>
+                        <td>a) Trong quá trình điện phân, dung dịch ở khu vực cathode có pH < 7.</td>
+                        <td><label><input type="radio" name="tfa" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfa" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>b) Màng ngăn giúp ngăn phản ứng giữa sodium hydroxide và chlorine trong quá trình điện phân.</td>
+                        <td><label><input type="radio" name="tfb" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfb" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>c) Sodium hydroxide rắn thu được từ dung dịch chứa NaOH bằng phương pháp chiết.</td>
+                        <td><label><input type="radio" name="tfc" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfc" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>d) Điện phân 2 lít dung dịch NaCl 0,5 M với điện cực trơ, màng ngăn xốp bằng dòng điện cường độ 0,2 A. Sau 1930 giây, dung dịch X thu được có pH bằng 11,3. (Bỏ qua sự thay đổi thể tích).</td>
+                        <td><label><input type="radio" name="tfd" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfd" value="S"> S</label></td>
+                    </tr>
+                </table>
+                <div class="socratic-hint" id="hint-tf1"><strong>💡 Câu hỏi gợi mở:</strong><br>- (a): Cathode sinh ra OH⁻, vậy môi trường là acid hay kiềm?<br>- (c): Chiết dùng để tách 2 chất lỏng không tan vào nhau. Còn NaOH là chất rắn tan trong nước, để thu chất rắn ta dùng chiết hay kết tinh?<br>- (d): Tính n<sub>e</sub> = (0,2 × 1930) / 96500 = 0,004 mol. Suy ra n(OH⁻) = 0,004 mol. Nồng độ [OH⁻] = 0,004 / 2 L = 0,002 M. pOH = -log(0,002) ≈ 2,7. Vậy pH = 14 - 2,7 = 11,3.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkTF('q-tf1', ['S', 'Đ', 'S', 'Đ'], 'Phát biểu b, d ĐÚNG. Phát biểu a SAI vì cathode sinh ra ion OH⁻ nên pH phải > 7. Phát biểu c SAI vì để thu chất rắn từ dung dịch ta dùng phương pháp cô đặc, kết tinh chứ không phải chiết lỏng-lỏng.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-tf1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+        function selectOpt(elem) {
+            const parent = elem.closest('.options');
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            elem.classList.add('selected');
+        }
+
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderFeedback(cardId, isCorrect, explanation) {
+            const card = document.getElementById(cardId);
+            const fb = card.querySelector('.feedback');
+            fb.style.display = "block";
+            fb.classList.remove('correct', 'wrong');
+            
+            if (isCorrect) {
+                fb.classList.add('correct');
+                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+            } else {
+                fb.classList.add('wrong');
+                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+            }
+        }
+
+        function checkMCQ(cardId, correctAns, explanation) {
+            const card = document.getElementById(cardId);
+            const sel = card.querySelector('.option.selected');
+            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+        }
+
+        function checkSA(cardId, inputId, correctAns, explanation) {
+            const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
+            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+            renderFeedback(cardId, val === correctAns, explanation);
+        }
+
+        function checkTF(cardId, ansArray, explanation) {
+            const card = document.getElementById(cardId);
+            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+            let score = 0, empty = false;
+            
+            names.forEach((n, i) => {
+                const rad = card.querySelector(`input[name="${n}"]:checked`);
+                if(!rad) empty = true;
+                else if(rad.value === ansArray[i]) score++;
+            });
+            
+            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+        }
+
+        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('videoOverlay');
+        
+        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
+        const triggers = [
+            { time: 15, id: 'q-mcq1', triggered: false },
+            { time: 50, id: 'q-mcq2', triggered: false },
+            { time: 90, id: 'q-mcq3', triggered: false },
+            { time: 130, id: 'q-sa1', triggered: false },
+            { time: 170, id: 'q-sa2', triggered: false },
+            { time: 200, id: 'q-sa3', triggered: false },
+            { time: 230, id: 'q-tf1', triggered: false }
+        ];
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+            
+            for (let i = 0; i < triggers.length; i++) {
+                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                    triggers[i].triggered = true;
+                    video.pause();
+                    overlay.classList.add('active');
+                    
+                    // Highlight và Scroll tới câu hỏi
+                    const questionCard = document.getElementById(triggers[i].id);
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break; 
+                }
+            }
+        });
+
+        function resumeVideo() {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+            video.play();
+        }
+    </script>
+</body>
+</html>
