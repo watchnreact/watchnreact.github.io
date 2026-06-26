@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchNReact - Phản ứng Chuẩn Độ Oxi hóa - Khử</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS ĐỒNG BỘ TOÀN HỆ THỐNG --- */
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --secondary: #7c3aed; --secondary-hover: #6d28d9;
+            --accent: #00d2ff; --accent-hover: #00b8e6;
+            --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --surface: #f1f5f9;
+            --dark-bg: #0f172a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 16px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        nav { 
+            background: var(--dark-bg); 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { color: white; text-decoration: none; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+        .logo svg { width: 36px; height: 36px; fill: var(--accent); }
+        .logo-text { background: linear-gradient(to right, var(--accent), #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .nav-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 1rem; transition: 0.2s; padding: 0.5rem 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); font-weight: 600; background-color: rgba(0, 210, 255, 0.1); }
+
+        /* Main Container Layout */
+        .layout-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .layout-container { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Video & Header */
+        .video-section { position: sticky; top: 90px; height: fit-content; }
+        .page-title { color: var(--text); font-size: 2rem; margin: 0 0 0.5rem 0; line-height: 1.2; }
+        .page-title span { color: var(--primary); }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .video-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        video { width: 100%; display: block; }
+
+        .video-overlay-msg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10;
+        }
+        .video-overlay-msg.active { opacity: 1; pointer-events: auto; }
+        .video-overlay-msg h3 { margin: 0 0 1rem 0; color: var(--accent); font-size: 1.5rem; }
+
+        /* Right Column: Interactive Questions */
+        .questions-section { padding-bottom: 2rem; }
+        
+        .section-tag {
+            display: inline-block; background: var(--surface); color: var(--primary);
+            padding: 0.4rem 1rem; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
+            margin: 2rem 0 1rem 0; border: 1px solid var(--border);
+        }
+        .section-tag:first-child { margin-top: 0; }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .card.active-question {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.15);
+            transform: translateX(-5px);
+        }
+
+        .card.active-question::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px; background: var(--accent);
+        }
+
+        .question-text { font-weight: 600; font-size: 1.1rem; margin-bottom: 1.2rem; display: block; color: var(--text); }
+        
+        /* Multiple Choice Options */
+        .options { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;}
+        .option { 
+            padding: 12px 16px; border: 2px solid var(--border); border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1rem; background: var(--card-bg); 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .option:hover { border-color: #cbd5e1; background: var(--surface); }
+        .option.selected { border-color: var(--primary); background: #eff6ff; font-weight: 500; }
+        .option.selected::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary); }
+
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; 
+            font-size: 1rem; outline: none; transition: 0.2s; margin-bottom: 1.5rem; box-sizing: border-box;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        /* True/False Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: var(--surface); font-weight: 600; color: var(--text); }
+        td:nth-child(2) { white-space: nowrap; text-align: center;}
+
+        /* Buttons & Feedback */
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; 
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-hint { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-hint:hover { background: #e2e8f0; color: var(--warning); transform: translateY(-2px); }
+
+        .socratic-hint {
+            display: none; background: #fffbeb; border-left: 4px solid var(--warning);
+            padding: 1rem; margin-top: 1rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #92400e; margin-bottom: 1.5rem;
+        }
+
+        .feedback { 
+            display: none; margin-top: 1.5rem; padding: 1.2rem; 
+            border-radius: 8px; font-size: 0.95rem; line-height: 1.6; 
+        }
+        .feedback.correct { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .feedback.wrong { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Footer */
+        footer { background: var(--dark-bg); color: #94a3b8; padding: 2rem 1rem; text-align: center; font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24"><path d="M9 2L9 8L2 20L2 22L22 22L22 20L15 8L15 2L17 2L17 0L7 0L7 2L9 2ZM11 2L13 2L13 8.3L19.2 19L4.8 19L11 8.3L11 2Z"></path><circle cx="12" cy="16" r="1.5"></circle></svg>
+            <span class="logo-text">WatchNReact</span>
+        </a>
+        <div class="nav-links">
+            <a href="experiment.html"><i class="fas fa-arrow-left"></i> Trở về danh sách</a>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="video-section">
+            <h1 class="page-title">Video 3: <span>Chuẩn Độ Fe²⁺ Bằng KMnO₄</span></h1>
+            <p class="page-subtitle"><b>Nguồn:</b> Kênh YouTube Mr. Skeleton Thí Nghiệm</p>
+            <p class="page-subtitle">Thí nghiệm xác định nồng độ muối Fe²⁺ bằng phương pháp chuẩn độ oxi hóa - khử.</p>
+            
+            <div class="video-wrapper">
+                <video id="mainVideo" controls controlsList="nodownload">
+                    <source src="Thí nghiệm 3 - Chuẩn độ.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://youtu.be/od6ixHbM0Ko" target="_blank" class="btn" style="background: #213061; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                        <i class="fab fa-youtube"></i> Xem Video Gốc (YouTube)
+                    </a>
+                </div>
+                <div class="video-overlay-msg" id="videoOverlay">
+                    <h3><i class="fas fa-pause-circle"></i> Video Tạm Dừng</h3>
+                    <p>Hãy trả lời câu hỏi đang sáng lên bên phải để tiếp tục tư duy nhé!</p>
+                    <button class="btn" style="margin-top: 1rem;" onclick="resumeVideo()"><i class="fas fa-play"></i> Bỏ qua & Xem tiếp</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 8px; font-size: 0.9rem;">
+                <strong><i class="fas fa-lightbulb" style="color: var(--warning);"></i> Hướng dẫn học:</strong> 
+                Video sẽ tự động dừng lại ở những khoảnh khắc quan trọng. Khi đó, một câu hỏi kiểm tra tư duy sẽ xuất hiện bên phải. Hãy cố gắng phân tích và tự trả lời trước khi xem tiếp.
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <div class="section-tag">I. Nhận diện dụng cụ & Thao tác</div>
+            
+            <div class="card" id="q-mcq1" data-time="15">
+                <span class="question-text">Câu 1: Trong thí nghiệm xác định nồng độ ion Fe²⁺ bằng phương pháp chuẩn độ với dung dịch thuốc tím (KMnO₄) trong môi trường acid, dung dịch thuốc tím được chứa trong dụng cụ nào?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Bình tam giác (Erlenmeyer).</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Cốc thủy tinh.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Burette.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Bình định mức.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq1"><strong>💡 Câu hỏi gợi mở:</strong> Dung dịch KMnO₄ có màu tím rất đậm. Đồng thời, trong chuẩn độ ta cần biết chính xác *thể tích* thuốc tím đã nhỏ xuống. Dụng cụ nào dạng ống dài, có vạch chia độ chi tiết và có khóa vặn ở dưới để nhỏ từng giọt?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq1', 'C', 'Burette là dụng cụ chuyên dụng để chứa và đo lường chính xác thể tích dung dịch chuẩn (KMnO₄) được nhỏ giọt xuống bình phản ứng.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-mcq2" data-time="45">
+                <span class="question-text">Câu 2: Một học sinh tiến hành chuẩn độ dung dịch Fe²⁺ bằng dung dịch KMnO₄ theo hai cách: <br>
+                - Cách 1: Nhỏ từ từ dung dịch KMnO₄ vào dung dịch Fe²⁺ (môi trường acid) đến khi xuất hiện màu hồng nhạt bền trong khoảng 30 giây.<br>
+                - Cách 2: Nhỏ từ từ dung dịch Fe²⁺ (môi trường acid) vào dung dịch KMnO₄ đến khi màu hồng tím biến mất.<br>
+                Hãy cho biết cách tiến hành nào là phù hợp chuẩn mực thao tác?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. Cách 1.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. Cách 2.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. Cả hai cách đều cho kết quả độ chính xác như nhau.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. Không có cách nào đúng quy chuẩn.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq2"><strong>💡 Câu hỏi gợi mở:</strong> Việc quan sát sự đổi màu từ KHÔNG MÀU (hoặc rất nhạt) sang CÓ MÀU HỒNG dễ hơn, hay từ màu TÍM ĐẬM chuyển dần sang không màu dễ hơn? Sự thay đổi nào mang lại tín hiệu trực quan rõ rệt, sắc nét nhất cho mắt người ngay tại giọt điểm tương đương?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq2', 'A', 'Nên nhỏ từ từ dung dịch có màu đậm (KMnO₄) xuống dung dịch không màu. Điểm tương đương dễ dàng nhận biết khi giọt thuốc tím cuối cùng không bị mất màu, làm dung dịch chuyển sang màu hồng nhạt. Cách 2 rất khó quan sát chính xác sự mất màu hoàn toàn ở giọt cuối.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa1" data-time="90">
+                <span class="question-text">Câu 3: Cho các nhận định sau về thí nghiệm: <br>
+                (1) Dung dịch KMnO₄ được chứa trong burette. <br>
+                (2) Dung dịch H₂SO₄ được thêm vào để tạo môi trường acid. <br>
+                (3) KMnO₄ là chất oxi hóa trong phản ứng chuẩn độ. <br>
+                (4) Khi kết thúc chuẩn độ, dung dịch trong bình tam giác chuyển sang màu hồng nhạt bền khoảng 30 giây. <br>
+                (5) Có thể thay H₂SO₄ loãng bằng dung dịch NaOH để phản ứng xảy ra tốt hơn.<br>
+                <br>Số nhận định <b>ĐÚNG</b> là bao nhiêu?</span>
+                <input type="text" id="input-sa1" placeholder="Nhập một số nguyên (VD: 1, 2, 3...)">
+                <div class="socratic-hint" id="hint-sa1"><strong>💡 Câu hỏi gợi mở:</strong> Hãy chú ý nhận định (5). Nếu bạn cho base (NaOH) vào dung dịch chứa muối Fe²⁺, điều gì sẽ xảy ra lập tức? Liệu Fe²⁺ có còn tồn tại tự do trong dung dịch để tham gia phản ứng chuẩn độ oxi hóa khử không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa1', 'input-sa1', '4', 'Có 4 nhận định đúng là (1), (2), (3) và (4). Nhận định (5) SAI vì nếu dùng NaOH (môi trường base), ion Fe²⁺ và Mn²⁺ sẽ lập tức tạo kết tủa hydroxide, làm hỏng quá trình chuẩn độ oxi hóa khử.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">II. Phân tích nguyên lý phản ứng</div>
+
+            <div class="card" id="q-mcq3" data-time="135">
+                <span class="question-text">Câu 4: Đánh giá các phát biểu về thực nghiệm chuẩn độ muối Fe(II) bằng thuốc tím KMnO₄: <br>
+                (a) Phản ứng chuẩn độ là: 2KMnO₄ + 10FeSO₄ + 8H₂SO₄ &#8594; 2MnSO₄ + K₂SO₄ + 5Fe₂(SO₄)₃ + 8H₂O với tổng hệ số tối giản là 36.<br>
+                (b) Khi dung dịch xuất hiện màu hồng bền khoảng 20s thì dừng chuẩn độ, tiến hành chuẩn độ 3 lần để lấy trung bình.<br>
+                (c) Có thể thực hiện phép chuẩn độ bằng cách đựng KMnO₄ ở bình tam giác và FeSO₄ ở burette, kết quả vẫn tương tự và quan sát dễ dàng.<br>
+                (d) Viên thuốc bổ sung sắt nặng 250 mg phản ứng vừa đủ với 10,0 mL KMnO₄ 0,04 M. Phần trăm khối lượng nguyên tố sắt là 44,8%.<br>
+                <br>Có bao nhiêu phát biểu <b>ĐÚNG</b>?</span>
+                <div class="options">
+                    <div class="option" data-value="A" onclick="selectOpt(this)">A. 2.</div>
+                    <div class="option" data-value="B" onclick="selectOpt(this)">B. 1.</div>
+                    <div class="option" data-value="C" onclick="selectOpt(this)">C. 3.</div>
+                    <div class="option" data-value="D" onclick="selectOpt(this)">D. 4.</div>
+                </div>
+                <div class="socratic-hint" id="hint-mcq3"><strong>💡 Câu hỏi gợi mở:</strong> <br>- Ở phát biểu (a), cộng thử các hệ số: 2 + 10 + 8 + 2 + 1 + 5 + 8 = ?<br>- Phát biểu (c) đã được đề cập ở câu 2, đảo vị trí có làm quan sát dễ dàng không?<br>- Ở phát biểu (d), số mol KMnO₄ là 0,4 mmol. Áp dụng định luật bảo toàn electron, sắt trao đổi 1e, Mn trao đổi 5e. Tính được mFe không?</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkMCQ('q-mcq3', 'C', 'Có 3 phát biểu đúng là (a), (b), (d). Phát biểu (c) SAI vì việc đảo vị trí sẽ làm điểm tương đương cực kì khó quan sát (chuyển từ tím đậm sang không màu) dẫn đến sai số lớn.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-mcq3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-tf1" data-time="180">
+                <span class="question-text">Câu 5 (Biện luận Đ/S): Muối Mohr có công thức (NH₄)₂Fe(SO₄)₂.6H₂O. Để xác định độ tinh khiết của loại muối này, học sinh cân chính xác 7,237 gam pha thành 100 mL dung dịch X. Lấy 10 mL X thêm 10 mL H₂SO₄ 10% được dung dịch Y. Chuẩn độ Y bằng KMnO₄ 0,023 M (3 lần, lấy trung bình V = 16,0 mL).</span>
+                <table>
+                    <tr><th>Phát biểu biện luận</th><th>Chọn</th></tr>
+                    <tr>
+                        <td>a) Dung dịch H₂SO₄ được thêm vào để tạo môi trường acid, giúp phản ứng xảy ra theo hướng tạo thành Mn²⁺ (không màu).</td>
+                        <td><label><input type="radio" name="tfa" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfa" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>b) Có thể thay dung dịch H₂SO₄ loãng bằng acid mạnh như HCl hay HNO₃ miễn là đảm bảo dư H⁺.</td>
+                        <td><label><input type="radio" name="tfb" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfb" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>c) Điểm dừng chuẩn độ nhận biết khi giọt KMnO₄ cuối cùng nhỏ vào không bị mất màu, làm dung dịch hơi hồng.</td>
+                        <td><label><input type="radio" name="tfc" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfc" value="S"> S</label></td>
+                    </tr>
+                    <tr>
+                        <td>d) Tính toán từ số liệu trên, độ tinh khiết (% khối lượng muối) của mẫu thử nằm gần nhất với giá trị 98,45%.</td>
+                        <td><label><input type="radio" name="tfd" value="Đ"> Đ</label> &nbsp; <label><input type="radio" name="tfd" value="S"> S</label></td>
+                    </tr>
+                </table>
+                <div class="socratic-hint" id="hint-tf1"><strong>💡 Câu hỏi gợi mở:</strong><br>- HCl có ion Cl⁻ mang tính khử, KMnO₄ lại oxi hóa rất mạnh, liệu KMnO₄ có quay sang oxi hóa Cl⁻ sinh ra khí độc Cl₂ làm sai lệch kết quả chuẩn độ?<br>- HNO₃ có tính oxi hóa mạnh, liệu nó có oxi hóa trước Fe²⁺ thành Fe³⁺ không?<br>- Ở ý d, hãy thử nháp: n(KMnO₄) = 0.023 * 0.016 = 0.000368 mol. Suy ra n(Fe) trong 10 mL là 5 * 0.000368 = 0.00184 mol. Trong 100mL là 0.0184 mol. Khối lượng muối Mohr = 0.0184 * 392 = 7.2128 gam. % = (7.2128 / 7.237)*100 = 99.66%.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkTF('q-tf1', ['Đ', 'S', 'Đ', 'S'], 'Phát biểu a, c ĐÚNG. Phát biểu b SAI vì HCl bị oxi hóa thành Cl₂, HNO₃ tự oxi hóa Fe²⁺, đều làm hỏng định lượng. Phát biểu d SAI vì phép tính thực tế ra khoảng 99,66%, không gần giá trị 98,45%.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-tf1')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="section-tag">III. Bài tập định lượng</div>
+
+            <div class="card" id="q-sa2" data-time="220">
+                <span class="question-text">Câu 6: Để xác định hàm lượng FeCO₃ trong quặng xiđerit, người ta cân 0,6 gam mẫu quặng, chế hóa để thu được dung dịch FeSO₄ trong môi trường H₂SO₄ loãng. Chuẩn độ bằng KMnO₄ 0,025 M thì vừa hết 25,2 mL. Tính % theo khối lượng của FeCO₃ trong mẫu quặng ban đầu?</span>
+                <input type="text" id="input-sa2" placeholder="Nhập đáp án (VD: 55.5, 60.9...)">
+                <div class="socratic-hint" id="hint-sa2"><strong>💡 Câu hỏi gợi mở:</strong><br>1. Tính số mol KMnO₄: n = $C_M \times V$.<br>2. Theo bảo toàn e, n(Fe²⁺) = 5 $\times$ n(KMnO₄).<br>3. Khối lượng FeCO₃ (M = 116) sinh ra từ lượng Fe²⁺ đó là bao nhiêu gam?<br>4. Lấy khối lượng FeCO₃ chia cho 0,6 gam rồi nhân 100%.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa2', 'input-sa2', '60.9', 'n(KMnO₄) = 0.025 * 0.0252 = 0.00063 mol. Suy ra n(Fe²⁺) = 5 * 0.00063 = 0.00315 mol. Khối lượng FeCO₃ = 0.00315 * 116 = 0.3654 gam. % khối lượng = (0.3654 / 0.6) * 100% = 60.9%.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa2')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="card" id="q-sa3" data-time="260">
+                <span class="question-text">Câu 7: Muối FeSO₄.7H₂O thường bị oxi hóa bởi O₂ không khí tạo hỗn hợp X chứa Fe(II) và Fe(III). Hòa tan lượng X vào dd chứa 0,06 mol H₂SO₄ thu được 100 mL dung dịch Y. Tiến hành 2 thí nghiệm:<br>
+                - Thí nghiệm 1: Lấy 25 mL Y phản ứng lượng dư BaCl₂ thu được 5,825 gam kết tủa.<br>
+                - Thí nghiệm 2: Lấy 25 mL Y thêm H₂SO₄ loãng dư, chuẩn độ bằng KMnO₄ 0,1 M hết 17,5 mL.<br>
+                Phần trăm Fe(II) đã bị oxi hóa là a%. Tính a (làm tròn hàng phần mười)?</span>
+                <input type="text" id="input-sa3" placeholder="Nhập đáp án số (VD: 20, 25...)">
+                <div class="socratic-hint" id="hint-sa3"><strong>💡 Câu hỏi gợi mở:</strong><br>- Kết tủa BaSO₄ (M=233) giúp xác định tổng gốc SO₄²⁻ trong 25mL Y. Nhân 4 lên, kết hợp trừ đi gốc SO₄²⁻ từ H₂SO₄ ban đầu (0.06) bạn sẽ biết được tổng số mol gốc SO₄²⁻ của muối sắt (cũng là tổng số mol Fe).<br>- Dữ kiện chuẩn độ KMnO₄ cho biết lượng Fe²⁺ CÒN LẠI chưa bị oxi hóa.<br>- Lấy (Tổng Fe - Fe²⁺ còn lại) / Tổng Fe.</div>
+                <div class="btn-group">
+                    <button class="btn" onclick="checkSA('q-sa3', 'input-sa3', '25', 'Từ kết tủa BaSO₄ ta tính được tổng mol Fe. Phép chuẩn độ cho ta biết số mol Fe²⁺ còn lại. Tính toán chênh lệch cho kết quả 25% lượng Fe²⁺ ban đầu đã bị oxi hóa thành Fe³⁺.')"><i class="fas fa-check"></i> Chốt Đáp Án</button>
+                    <button class="btn btn-hint" onclick="toggleHint('hint-sa3')"><i class="fas fa-brain"></i> Gợi Mở Socratic</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WatchNReact - Hệ Sinh Thái Học Hóa Học Tương Tác</p>
+    </footer>
+
+    <script>
+        // --- HỆ THỐNG GIAO DIỆN CÂU HỎI ---
+        function selectOpt(elem) {
+            const parent = elem.closest('.options');
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            elem.classList.add('selected');
+        }
+
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = (hintEl.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderFeedback(cardId, isCorrect, explanation) {
+            const card = document.getElementById(cardId);
+            const fb = card.querySelector('.feedback');
+            fb.style.display = "block";
+            fb.classList.remove('correct', 'wrong');
+            
+            if (isCorrect) {
+                fb.classList.add('correct');
+                fb.innerHTML = `<strong><i class="fas fa-check-circle"></i> Tư duy hoàn toàn chính xác!</strong><br><span style="margin-top: 8px; display: block;"><em>Phân tích:</em> ${explanation}</span>`;
+            } else {
+                fb.classList.add('wrong');
+                fb.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Cần suy luận kỹ hơn một chút!</strong><br><span style="margin-top: 8px; display: block;"><em>Nhắc nhớ:</em> ${explanation}</span>`;
+            }
+        }
+
+        function checkMCQ(cardId, correctAns, explanation) {
+            const card = document.getElementById(cardId);
+            const sel = card.querySelector('.option.selected');
+            if(!sel) { alert("Vui lòng chọn một phương án trước khi chốt đáp án!"); return; }
+            renderFeedback(cardId, sel.getAttribute('data-value') === correctAns, explanation);
+        }
+
+        function checkSA(cardId, inputId, correctAns, explanation) {
+            const val = document.getElementById(inputId).value.trim().replace(',', '.'); 
+            if(!val) { alert("Vui lòng nhập đáp án của bạn!"); return; }
+            renderFeedback(cardId, val === correctAns, explanation);
+        }
+
+        function checkTF(cardId, ansArray, explanation) {
+            const card = document.getElementById(cardId);
+            const names = ['tfa', 'tfb', 'tfc', 'tfd'];
+            let score = 0, empty = false;
+            
+            names.forEach((n, i) => {
+                const rad = card.querySelector(`input[name="${n}"]:checked`);
+                if(!rad) empty = true;
+                else if(rad.value === ansArray[i]) score++;
+            });
+            
+            if(empty) { alert("Bạn phải đánh giá đầy đủ Đ/S cho cả 4 phát biểu để rèn luyện tư duy phản biện toàn diện!"); return; }
+            renderFeedback(cardId, score === 4, explanation + `<br><strong>Kết quả chẩn đoán của bạn: Đúng ${score}/4 ý.</strong>`);
+        }
+
+        // --- HỆ THỐNG VIDEO TƯƠNG TÁC THEO THỜI GIAN ---
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('videoOverlay');
+        
+        // Định nghĩa các mốc thời gian (giây) để kích hoạt câu hỏi
+        const triggers = [
+            { time: 15, id: 'q-mcq1', triggered: false },
+            { time: 45, id: 'q-mcq2', triggered: false },
+            { time: 90, id: 'q-sa1', triggered: false },
+            { time: 135, id: 'q-mcq3', triggered: false },
+            { time: 180, id: 'q-tf1', triggered: false },
+            { time: 220, id: 'q-sa2', triggered: false },
+            { time: 260, id: 'q-sa3', triggered: false }
+        ];
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+            
+            for (let i = 0; i < triggers.length; i++) {
+                if (!triggers[i].triggered && currentTime >= triggers[i].time && currentTime < triggers[i].time + 2) {
+                    triggers[i].triggered = true;
+                    video.pause();
+                    overlay.classList.add('active');
+                    
+                    // Highlight và Scroll tới câu hỏi
+                    const questionCard = document.getElementById(triggers[i].id);
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+                    questionCard.classList.add('active-question');
+                    
+                    questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break; 
+                }
+            }
+        });
+
+        function resumeVideo() {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-question'));
+            video.play();
+        }
+    </script>
+</body>
+</html>
